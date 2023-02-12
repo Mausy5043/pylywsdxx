@@ -8,7 +8,12 @@ import src.pylywsdxx as pyly
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "action",
-    help="Action to perform, either: sync - synchronize time with this machine, read - read current values from device, setc/setf - set temperature unit on display to Celsius/Fahrenheit",
+    help=(
+        "Action to perform, either: "
+        "sync - synchronize time with this machine, "
+        "read - read current values from device, "
+        "setc/setf - set temperature unit on display to Celsius/Fahrenheit"
+    ),
     choices=["sync", "read", "setc", "setf"],
 )
 parser.add_argument("mac", help="MAC address of LYWSD02 device", nargs="+")
