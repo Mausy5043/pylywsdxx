@@ -16,7 +16,7 @@ with open(args.output, "w") as csvfile:
     c.writerow(["Time", "Min temperature", "Min humidity", "Max temperature", "Max humidity"])
 
     try:
-        client = pyly.Lywsd03mmcClient(args.mac)
+        client = pyly.Lywsd03client(args.mac)
         print("Fetching data from {}".format(args.mac))
         data = client.data
         print("Temperature: {}".format(data.temperature))
