@@ -28,6 +28,7 @@ class Lywsd03client(Lywsd02client):
     # Call the parent init with a bigger notification timeout
     def __init__(self, mac, notification_timeout=15.0):
         super().__init__(mac, notification_timeout)
+        self._latest_record = False
 
     def _process_sensor_data(self, data):
         temperature, humidity, voltage = struct.unpack_from("<hBh", data)
