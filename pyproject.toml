@@ -8,8 +8,8 @@ build-backend = "hatchling.build"
 [project]
 name = "pylywsdxx"
 description = "A Python3 class to interrogate Xiaomi Mijia LYWSD* sensors."
-version = "0.0.2"
-dependencies = []
+version = "0.0.3"
+dependencies = ["bluepy"]
 license = "MIT"
 authors = [
   { name="Mausy5043" },
