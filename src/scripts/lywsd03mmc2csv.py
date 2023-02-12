@@ -30,5 +30,5 @@ with open(args.output, "w") as csvfile:
         for i in history:
             c.writerow(history[i])
         print("Done")
-    except Exception as e:
+    except (Exception,) as e:
         print(e)

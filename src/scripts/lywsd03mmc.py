@@ -17,5 +17,5 @@ for mac in args.mac:
         print(f"Humidity: {data.humidity}%")
         print(f"Battery: {client.battery}%")
         print()
-    except Exception as e:
+    except (Exception,) as e:
         print(e)

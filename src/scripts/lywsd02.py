@@ -36,5 +36,5 @@ for mac in args.mac:
             client.units = "C"
         elif args.action == "setf":
             client.units = "F"
-    except Exception as e:
+    except (Exception,) as e:
         print(e)
