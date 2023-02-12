@@ -123,8 +123,7 @@ class Lywsd02client:
             return self._tz_offset
         if time.daylight:
             return -time.altzone // 3600
-        else:
-            return -time.timezone // 3600
+        return -time.timezone // 3600
 
     @tz_offset.setter
     def tz_offset(self, tz_offset: int):
