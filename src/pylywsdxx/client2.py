@@ -27,8 +27,7 @@ class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humid
 
 
 class Lywsd02client:  # pylint: disable=R0902
-    """Class to communicate with LYWSD02 devices.
-    """
+    """Class to communicate with LYWSD02 devices."""
 
     UNITS = {
         b"\x01": "F",
