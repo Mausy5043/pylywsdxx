@@ -21,10 +21,14 @@ UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes          
 
 
 class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humidity"])):
+    """Class to store sensor data."""
+
     __slots__ = ()
 
 
 class Lywsd02client:
+    """Class to communicate with LYWSD02 devices"""
+
     UNITS = {
         b"\x01": "F",
         b"\xff": "C",
@@ -80,7 +84,7 @@ class Lywsd02client:
 
     @units.setter
     def units(self, value):
-        if value.upper() not in self.UNITS_CODES.keys():
+        if value.upper() not in self.UNITS_CODES:
             raise ValueError("Units value must be one of %s" % self.UNITS_CODES.keys())
 
         with self.connect():
