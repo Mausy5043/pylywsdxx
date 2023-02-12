@@ -11,10 +11,16 @@ UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # Last idx 152          R
 
 # Create a structure to store the data in, which includes battery data
 class SensorDataBattery(collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery"])):
+    """Class to store sensor data.
+    For LYWSD03MMC devices also battery information is available.
+    """
+
     __slots__ = ()
 
 
 class Lywsd03client(Lywsd02client):
+    """Class to communicate with LYWSD03MMC devices"""
+
     # Temperature units specific to LYWSD03MMC devices
     UNITS = {b"\x01": "F", b"\x00": "C"}
     UNITS_CODES = {"F": b"\x01", "C": b"\x00"}
