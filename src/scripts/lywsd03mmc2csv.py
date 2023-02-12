@@ -17,14 +17,14 @@ with open(args.output, "w") as csvfile:
 
     try:
         client = pyly.Lywsd03client(args.mac)
-        print("Fetching data from {}".format(args.mac))
+        print(f"Fetching data from {args.mac}")
         data = client.data
-        print("Temperature: {}".format(data.temperature))
-        print("Humidity: {}%".format(data.humidity))
-        print("Battery: {}%".format(data.battery))
-        print("Device start time: {}".format(client.start_time))
+        print(f"Temperature: {data.temperature}")
+        print(f"Humidity: {data.humidity}%")
+        print(f"Battery: {data.battery}%")
+        print(f"Device start time: {client.start_time}")
         print()
-        print("Fetching history from {}".format(args.mac))
+        print(f"Fetching history from {args.mac}")
         client.enable_history_progress = True
         history = client.history_data
         for i in history:

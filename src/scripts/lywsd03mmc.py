@@ -11,11 +11,11 @@ args = parser.parse_args()
 for mac in args.mac:
     try:
         client = pyly.Lywsd03client(mac)
-        print("Fetching data from {}".format(mac))
+        print(f"Fetching data from {mac}")
         data = client.data
-        print("Temperature: {}°C".format(data.temperature))
-        print("Humidity: {}%".format(data.humidity))
-        print("Battery: {}%".format(client.battery))
+        print(f"Temperature: {data.temperature}°C")
+        print(f"Humidity: {data.humidity}%")
+        print(f"Battery: {client.battery}%")
         print()
     except Exception as e:
         print(e)

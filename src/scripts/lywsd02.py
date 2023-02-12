@@ -18,14 +18,14 @@ for mac in args.mac:
     try:
         client = pyly.Lywsd02client(mac)
         if args.action == "sync":
-            print("Synchronizing time of {}".format(mac))
+            print(f"Synchronizing time of {mac}")
             client.time = datetime.now()
         elif args.action == "read":
-            print("Fetching data from {}".format(mac))
+            print(f"Fetching data from {mac}")
             data = client.data
-            print("Temperature: {}°C".format(data.temperature))
-            print("Humidity: {}%".format(data.humidity))
-            print("Battery: {}%".format(client.battery))
+            print(f"Temperature: {data.temperature}°C")
+            print(f"Humidity: {data.humidity}%")
+            print(f"Battery: {client.battery}%")
             print()
         elif args.action == "setc":
             client.units = "C"
