@@ -45,7 +45,7 @@ class Lywsd03client(Lywsd02client):
 
     def _get_history_data(self):
         # Get the time the device was first run
-        self.start_time
+        self.start_time()
 
         # Work out the expected last record we'll be sent from the device.
         # The current hour doesn't appear until the end of the hour, and the time is recorded as
