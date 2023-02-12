@@ -24,7 +24,7 @@ class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humid
     __slots__ = ()
 
 
-class Lywsd_client:
+class Lywsd02client:
     UNITS = {
         b"\x01": "F",
         b"\xff": "C",
