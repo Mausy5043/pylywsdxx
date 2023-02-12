@@ -11,27 +11,27 @@ from bluepy import btle
 
 _LOGGER = logging.getLogger(__name__)
 
-UUID_UNITS = 'EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6'        # 0x00 - F, 0x01 - C    READ WRITE
-UUID_HISTORY = 'EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6'      # Last idx 152          READ NOTIFY
-UUID_TIME = 'EBE0CCB7-7A0A-4B0C-8A1A-6FF2997DA3A6'         # 5 or 4 bytes          READ WRITE
-UUID_DATA = 'EBE0CCC1-7A0A-4B0C-8A1A-6FF2997DA3A6'         # 3 bytes               READ NOTIFY
-UUID_BATTERY = 'EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6'      # 1 byte                READ
-UUID_NUM_RECORDS = 'EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6'  # 8 bytes               READ
-UUID_RECORD_IDX = 'EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6'   # 4 bytes               READ WRITE
+UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # 0x00 - F, 0x01 - C    READ WRITE
+UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # Last idx 152          READ NOTIFY
+UUID_TIME = "EBE0CCB7-7A0A-4B0C-8A1A-6FF2997DA3A6"  # 5 or 4 bytes          READ WRITE
+UUID_DATA = "EBE0CCC1-7A0A-4B0C-8A1A-6FF2997DA3A6"  # 3 bytes               READ NOTIFY
+UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # 1 byte                READ
+UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # 8 bytes               READ
+UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # 4 bytes               READ WRITE
 
 
-class SensorData(collections.namedtuple('SensorDataBase', ['temperature', 'humidity'])):
+class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humidity"])):
     __slots__ = ()
 
 
 class Lywsd_client:
     UNITS = {
-        b'\x01': 'F',
-        b'\xff': 'C',
+        b"\x01": "F",
+        b"\xff": "C",
     }
     UNITS_CODES = {
-        'C': b'\xff',
-        'F': b'\x01',
+        "C": b"\xff",
+        "F": b"\x01",
     }
 
     def __init__(self, mac, notification_timeout=5.0):
@@ -47,7 +47,7 @@ class Lywsd_client:
     @contextlib.contextmanager
     def connect(self):
         if self._context_depth == 0:
-            _LOGGER.debug('Connecting to %s', self._mac)
+            _LOGGER.debug("Connecting to %s", self._mac)
             self._peripheral.connect(self._mac)
         self._context_depth += 1
         try:
@@ -55,7 +55,7 @@ class Lywsd_client:
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
-                _LOGGER.debug('Disconnecting from %s', self._mac)
+                _LOGGER.debug("Disconnecting from %s", self._mac)
                 self._peripheral.disconnect()
 
     @property
@@ -81,8 +81,7 @@ class Lywsd_client:
     @units.setter
     def units(self, value):
         if value.upper() not in self.UNITS_CODES.keys():
-            raise ValueError(
-                'Units value must be one of %s' % self.UNITS_CODES.keys())
+            raise ValueError("Units value must be one of %s" % self.UNITS_CODES.keys())
 
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
@@ -101,15 +100,15 @@ class Lywsd_client:
             ch = self._peripheral.getCharacteristics(uuid=UUID_TIME)[0]
             value = ch.read()
         if len(value) == 5:
-            ts, tz_offset = struct.unpack('Ib', value)
+            ts, tz_offset = struct.unpack("Ib", value)
         else:
-            ts = struct.unpack('I', value)[0]
+            ts = struct.unpack("I", value)[0]
             tz_offset = 0
         return datetime.fromtimestamp(ts), tz_offset
 
     @time.setter
     def time(self, dt: datetime):
-        data = struct.pack('Ib', int(dt.timestamp()), self.tz_offset)
+        data = struct.pack("Ib", int(dt.timestamp()), self.tz_offset)
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_TIME)[0]
             ch.write(data, withResponse=True)
@@ -132,21 +131,21 @@ class Lywsd_client:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
             value = ch.read()
-        _idx = 0 if len(value) == 0 else struct.unpack_from('I', value)
+        _idx = 0 if len(value) == 0 else struct.unpack_from("I", value)
         return _idx
 
     @history_index.setter
     def history_index(self, value):
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
-            ch.write(struct.pack('I', value), withResponse=True)
+            ch.write(struct.pack("I", value), withResponse=True)
 
     @property
     def num_stored_entries(self):
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_NUM_RECORDS)[0]
             value = ch.read()
-        total_records, current_records = struct.unpack_from('II', value)
+        total_records, current_records = struct.unpack_from("II", value)
         return total_records, current_records
 
     @property
@@ -158,18 +157,15 @@ class Lywsd_client:
         with self.connect():
             self._subscribe(UUID_DATA, self._process_sensor_data)
 
-            if not self._peripheral.waitForNotifications(
-                    self._notification_timeout):
-                raise TimeoutError('No data from device for {} seconds'.format(
-                    self._notification_timeout))
+            if not self._peripheral.waitForNotifications(self._notification_timeout):
+                raise TimeoutError("No data from device for {} seconds".format(self._notification_timeout))
 
     def _get_history_data(self):
         with self.connect():
             self._subscribe(UUID_HISTORY, self._process_history_data)
 
             while True:
-                if not self._peripheral.waitForNotifications(
-                        self._notification_timeout):
+                if not self._peripheral.waitForNotifications(self._notification_timeout):
                     break
 
     def handleNotification(self, handle, data):
@@ -186,13 +182,13 @@ class Lywsd_client:
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
     def _process_sensor_data(self, data):
-        temperature, humidity = struct.unpack_from('hB', data)
+        temperature, humidity = struct.unpack_from("hB", data)
         temperature /= 100
 
         self._data = SensorData(temperature=temperature, humidity=humidity)
 
     def _process_history_data(self, data):
-        (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from('<IIhBhB', data)
+        (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
         ts = datetime.fromtimestamp(ts)
         min_temp /= 100
