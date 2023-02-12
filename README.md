@@ -1,53 +1,41 @@
-# pynut3 
-#### (aka python-nut3)
+# pylywsdxx
 
 
-[![PyPI version](https://img.shields.io/pypi/v/pynut3.svg?logo=pypi&logoColor=FFE873)](https://pypi.org/project/pynut3)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/pynut3.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/pynut3)
-[![PyPI downloads](https://img.shields.io/pypi/dm/pynut3.svg)](https://pypistats.org/packages/pynut3)
+[![PyPI version](https://img.shields.io/pypi/v/pylywsdxx.svg?logo=pypi&logoColor=FFE873)](https://pypi.org/project/pylywsdxx)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/pylywsdxx.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/pylywsdxx)
+[![PyPI downloads](https://img.shields.io/pypi/dm/pylywsdxx.svg)](https://pypistats.org/packages/pylywsdxx)
 [![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
 
 
-This is a Python3 library to allow communication with NUT ([Network UPS Tools](http://www.networkupstools.org/))
-Uninterruptible Power Supply servers.
+This is a Python3 library to allow interrogation Xiaomi Mijia LYWSD* sensors via Bluetooth (BLE).
 
 **Note**: This is an unofficial project, and is in no way supported or
-endorsed by the [Network UPS Tools developers](https://github.com/networkupstools).
+endorsed by Xiaomi.
 
 ## Requirements
 
-The module itself requires only Python3 (Python2 may work but is nolonger supported).
+To be determined.
 
 ## Installation
 
-    pip install pynut3
+    pip install pylywsdxx
 
 ## Usage
 
-Assuming you have a UPS which is connected to a host on the network with IP `192.168.2.17` it can be interogated as follows:
+TBD
 
 ```python3
-from pynut3 import nut3
-client = nut3.PyNUT3Client(host='192.168.2.17')
-print(client.help())
-ups_dict = client.list_ups()
-for k1, v1 in ups_dict.items():
-    print(f"{v1} is called with id {k1}")
-    vars_dict = client.list_vars(k)
-    for k2, v2 in vars_dict.items():
-        print(f"{k2}\t:\t{v2}")
+import pylywsdxx
+
 ```
 
-Please note that this module has completely and intentionally broken backwards compatibility with previous versions of PyNUT.
+Please note that this module has completely and intentionally broken backwards compatibility with previous and existing versions of `lywsd02` and `lywsd03mmc` .
 
 ## Acknowledgements
 
-Based on various NUT Client related Python scripts, written by David Goncalves as [PyNUT](https://github.com/networkupstools/nut/tree/master/scripts/python), and released under GPL v3.   
-Later overhauled by rshipp with Python3 modifications by hordurk, george2 and mezz64.
-Others will have contributed along the way. I was not able to reliably find their names.
-
-Further updates in this fork are by me (Mausy5043) and based/inspired on prior work from timurlenk07, StSAV012, rshipp & Rojer-X86
+Based on previous work by Mikhail Baranov (`h4`) : [lywsd02](https://github.com/h4/lywsd02)   
+and Duncan Barclay (`uduncanu`) : [lywsd03mmc](https://github.com/uduncanu/lywsd03mmc)   
 
 ## License
 
-The GPL v3 license continues to apply. See [LICENSE](LICENSE).
+See [LICENSE](LICENSE).
