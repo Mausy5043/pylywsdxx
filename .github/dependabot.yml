@@ -12,3 +12,7 @@ updates:
     target-branch: "master"
     schedule:
       interval: 'daily'
+    allow:
+      # Allow both direct and indirect updates for all packages
+      - dependency-type: "all"
+      
