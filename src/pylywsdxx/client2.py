@@ -85,7 +85,7 @@ class Lywsd02client:
     @units.setter
     def units(self, value):
         if value.upper() not in self.UNITS_CODES:
-            raise ValueError("Units value must be one of %s" % self.UNITS_CODES.keys())
+            raise ValueError(f"Units value must be one of {self.UNITS_CODES.keys()}")
 
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
@@ -121,7 +121,7 @@ class Lywsd02client:
     def tz_offset(self):
         if self._tz_offset is not None:
             return self._tz_offset
-        elif time.daylight:
+        if time.daylight:
             return -time.altzone // 3600
         else:
             return -time.timezone // 3600
@@ -162,7 +162,7 @@ class Lywsd02client:
             self._subscribe(UUID_DATA, self._process_sensor_data)
 
             if not self._peripheral.waitForNotifications(self._notification_timeout):
-                raise TimeoutError("No data from device for {} seconds".format(self._notification_timeout))
+                raise TimeoutError(f"No data from device for {self._notification_timeout} seconds")
 
     def _get_history_data(self):
         with self.connect():
