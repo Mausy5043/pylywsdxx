@@ -82,7 +82,7 @@ class Lywsd03client(Lywsd02client):
     def output_history_progress(self, ts, min_temp, max_temp):
         if not self.enable_history_progress:
             return
-        print("{}: {} to {}".format(ts, min_temp, max_temp))
+        print(f"{ts}: {min_temp} to {max_temp}")
 
     # Locally cache the start time of the device.
     # This value won't change, and caching improves the performance getting the history data
