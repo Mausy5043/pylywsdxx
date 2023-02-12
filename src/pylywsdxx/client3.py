@@ -18,8 +18,7 @@ class Sensor3Data(collections.namedtuple("Sensor3DataBase", ["temperature", "hum
 
 
 class Lywsd03client(Lywsd02client):
-    """Class to communicate with LYWSD03MMC devices.
-    """
+    """Class to communicate with LYWSD03MMC devices."""
 
     # Temperature units specific to LYWSD03MMC devices
     UNITS = {b"\x01": "F", b"\x00": "C"}
@@ -56,12 +55,13 @@ class Lywsd03client(Lywsd02client):
         battery = round(((voltage - 2.1) / (3.4 - 2.1) * 100), 1)
         self._data = Sensor3Data(temperature=temperature, humidity=humidity, battery=battery, voltage=voltage)
 
-    # Battery data comes along with the temperature and humidity data, so just get it from there
     @property
     def battery(self):
         """
-        Battery data comes along with the temperature and humidity data, so just get it from there
-        :return: guestimate of battery percentage
+        Battery data comes along with the temperature and humidity data, so just get it from there.
+
+        Returns:
+             guestimate of battery percentage
         """
         return self.data.battery
 
@@ -98,15 +98,11 @@ class Lywsd03client(Lywsd02client):
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
         self.output_history_progress(ts, min_temp, max_temp)
 
-
     def output_history_progress(self, ts, min_temp, max_temp):
         if not self.enable_history_progress:
             return
         print(f"{ts}: {min_temp} to {max_temp}")
 
-
-    # Work out the start time of the device by taking the current time, subtracting the time
-    # taken from the device (the run time), and adding the timezone offset.
     @property
     def start_time(self):
         """
@@ -119,8 +115,6 @@ class Lywsd03client(Lywsd02client):
             self._start_time = datetime.now() - start_time_delta
         return self._start_time
 
-    # Disable setting the time and timezone.
-    # LYWSD03MMCs don't have visible clocks
     @property
     def time(self):
         """
