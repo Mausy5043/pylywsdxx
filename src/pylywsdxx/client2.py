@@ -27,7 +27,8 @@ class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humid
 
 
 class Lywsd02client:  # pylint: disable=R0902
-    """Class to communicate with LYWSD02 devices"""
+    """Class to communicate with LYWSD02 devices.
+    """
 
     UNITS = {
         b"\x01": "F",
@@ -51,7 +52,7 @@ class Lywsd02client:  # pylint: disable=R0902
     @contextlib.contextmanager
     def connect(self):
         if self._context_depth == 0:
-            _LOGGER.debug("Connecting to %s", self._mac)
+            _LOGGER.debug(f"Connecting to {self._mac}")
             self._peripheral.connect(self._mac)
         self._context_depth += 1
         try:
@@ -59,7 +60,7 @@ class Lywsd02client:  # pylint: disable=R0902
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
-                _LOGGER.debug("Disconnecting from %s", self._mac)
+                _LOGGER.debug(f"Disconnecting from {self._mac}")
                 self._peripheral.disconnect()
 
     @property
