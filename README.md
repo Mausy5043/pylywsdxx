@@ -7,10 +7,9 @@
 [![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
 
 
-This is a Python3 library to allow interrogation Xiaomi Mijia LYWSD* sensors via Bluetooth (BLE).
+This is a Python3 library to allow interrogation of Xiaomi Mijia LYWSD* sensors via Bluetooth (BLE).
 
-**Note**: This is an unofficial project, and is in no way supported or
-endorsed by Xiaomi.
+**Note**: This is an unofficial project, and is in no way supported or endorsed by Xiaomi.
 
 ## Requirements
 
@@ -18,16 +17,26 @@ To be determined.
 
 ## Installation
 
-    pip install pylywsdxx
+```bash
+pip install pylywsdxx
+```
 
 ## Usage
 
-TBD
-Please note that versions prior to 0.1.0 are early alpha and virtually guaranteed to be defective!
+ Please note that versions prior to 0.1.0 are early alpha and virtually guaranteed to be defective!
 
 ```python3
-import pylywsdxx
+import pylywsdxx as pyly
 
+mac = "A4:C1:38:0D:EA:D0"
+
+client2 = pyly.Lywsd02client(mac)
+data2 = client2.data
+print(f"Temperature: {data2.temperature}°C")
+
+client3 = pyly.Lywsd03client(mac)
+data3 = client3.data
+print(f"Temperature: {data3.temperature}°C")
 ```
 
 Please note that this module has completely and intentionally broken backwards compatibility with previous and existing versions of `lywsd02` and `lywsd03mmc` .
