@@ -3,7 +3,7 @@
 import argparse
 import csv
 
-import src.pylywsdxx as pyly
+import pylywsdxx as pyly    # noqa
 
 parser = argparse.ArgumentParser()
 parser.add_argument("mac", help="MAC address of LYWSD03MMC device")
