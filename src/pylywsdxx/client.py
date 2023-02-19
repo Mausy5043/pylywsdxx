@@ -22,7 +22,9 @@ UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes          
 
 
 class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])):
-    """Class to store sensor data."""
+    """Class to store sensor data..
+    For LYWSD03MMC devices also battery information is available.
+    """
 
     __slots__ = ()
 
@@ -198,14 +200,6 @@ class Lywsd02client:  # pylint: disable=R0902
         max_temp /= 100
 
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
-
-    #
-    # class Sensor3Data(collections.namedtuple("Sensor3DataBase", ["temperature", "humidity", "battery", "voltage"])):
-    #     """Class to store sensor data.
-    #     For LYWSD03MMC devices also battery information is available.
-    #     """
-
-    __slots__ = ()
 
 
 class Lywsd03client(Lywsd02client):
