@@ -23,6 +23,7 @@ To be determined.
 ## Usage
 
 TBD
+Please note that versions prior to 0.1.0 are early alpha and virtually guaranteed to be defective!
 
 ```python3
 import pylywsdxx
