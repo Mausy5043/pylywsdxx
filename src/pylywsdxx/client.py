@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
+UUID_HISTORY_3 = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _   Last idx 152          READ NOTIFY
 UUID_TIME = "EBE0CCB7-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _        5 or 4 bytes          READ WRITE
 UUID_DATA = "EBE0CCC1-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _        3 bytes               READ NOTIFY
 UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte                READ
@@ -20,7 +21,7 @@ UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes          
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
 
-class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humidity"])):
+class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])):
     """Class to store sensor data."""
 
     __slots__ = ()
@@ -38,13 +39,13 @@ class Lywsd02client:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    def __init__(self, mac, notification_timeout=5.0):
+    def __init__(self, mac, notification_timeout=15.0):
         self._mac = mac
         self._peripheral = btle.Peripheral()
         self._notification_timeout = notification_timeout
         self._handles = {}
         self._tz_offset = None
-        self._data = SensorData(None, None)
+        self._data = SensorData(None, None, None, None)
         self._history_data = collections.OrderedDict()
         self._context_depth = 0
 
@@ -187,8 +188,7 @@ class Lywsd02client:  # pylint: disable=R0902
     def _process_sensor_data(self, data):
         temperature, humidity = struct.unpack_from("hB", data)
         temperature /= 100
-
-        self._data = SensorData(temperature=temperature, humidity=humidity)
+        self._data = SensorData(temperature=temperature, humidity=humidity, battery=None, voltage=None)
 
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
@@ -199,14 +199,11 @@ class Lywsd02client:  # pylint: disable=R0902
 
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
 
-
-UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # Last idx 152          READ NOTIFY
-
-
-class Sensor3Data(collections.namedtuple("Sensor3DataBase", ["temperature", "humidity", "battery", "voltage"])):
-    """Class to store sensor data.
-    For LYWSD03MMC devices also battery information is available.
-    """
+    #
+    # class Sensor3Data(collections.namedtuple("Sensor3DataBase", ["temperature", "humidity", "battery", "voltage"])):
+    #     """Class to store sensor data.
+    #     For LYWSD03MMC devices also battery information is available.
+    #     """
 
     __slots__ = ()
 
@@ -245,9 +242,14 @@ class Lywsd03client(Lywsd02client):
         voltage /= 1000
 
         # Estimate the battery percentage remaining
-        # CR2024 maximum theoretical voltage = 3.400V
+        # CR2025 / CR2032 maximum theoretical voltage = 3.4 V
+        # ref. Table 1;
+        #  CR2025: https://www.farnell.com/datasheets/1496883.pdf
+        #  CR2032: https://www.farnell.com/datasheets/1496885.pdf
+        # End voltage for these batteries is 2.0 V but most devices
+        # will stop working when below 2.3 V (YMMV).
         battery = round(((voltage - 2.1) / (3.4 - 2.1) * 100), 1)
-        self._data = Sensor3Data(temperature=temperature, humidity=humidity, battery=battery, voltage=voltage)
+        self._data = SensorData(temperature=temperature, humidity=humidity, battery=battery, voltage=voltage)
 
     @property
     def battery(self):
@@ -270,7 +272,7 @@ class Lywsd03client(Lywsd02client):
 
         self._latest_record = None
         with self.connect():
-            self._subscribe(UUID_HISTORY, self._process_history_data)
+            self._subscribe(UUID_HISTORY_3, self._process_history_data)
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
