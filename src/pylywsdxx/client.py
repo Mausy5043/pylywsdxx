@@ -315,7 +315,7 @@ class Lywsd03client(Lywsd02client):
         return super().time
 
     @time.setter
-    def time(self, dt: datetime):
+    def time(self, dt: datetime):  # pylint: disable=W0613
         return
 
     @property
@@ -323,5 +323,5 @@ class Lywsd03client(Lywsd02client):
         return super().tz_offset
 
     @tz_offset.setter
-    def tz_offset(self, tz_offset: int):
+    def tz_offset(self, tz_offset: int):  # pylint: disable=W0613
         return
