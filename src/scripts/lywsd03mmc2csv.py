@@ -11,7 +11,7 @@ parser.add_argument("--output", help="File to output", default="output.csv")
 
 args = parser.parse_args()
 
-with open(args.output, "w") as csvfile:
+with open(args.output, "w", encoding="utf-8") as csvfile:
     c = csv.writer(csvfile)
     c.writerow(["Time", "Min temperature", "Min humidity", "Max temperature", "Max humidity"])
 
