@@ -7,7 +7,7 @@ import struct
 import time
 from datetime import datetime, timedelta
 
-from bluepy import btle
+from bluepy3 import btle
 
 _LOGGER = logging.getLogger(__name__)
 
