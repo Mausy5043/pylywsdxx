@@ -13,7 +13,7 @@ This is a Python3 library to allow interrogation of Xiaomi Mijia LYWSD* sensors 
 
 ## Requirements
 
-To be determined.
+`pylywsdxx` requires `bluepy3` which should be installed automagically when using the installation instructions below.
 
 ## Installation
 
