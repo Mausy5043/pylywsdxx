@@ -3,7 +3,7 @@
 import argparse
 from datetime import datetime
 
-import pylywsdxx as pyly    # noqa
+import pylywsdxx as pyly  # noqa
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

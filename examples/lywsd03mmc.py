@@ -2,7 +2,7 @@
 
 import argparse
 
-import pylywsdxx as pyly    # noqa
+import pylywsdxx as pyly  # noqa
 
 parser = argparse.ArgumentParser()
 parser.add_argument("mac", help="MAC address of LYWSD02 device", nargs="+")
