@@ -19,3 +19,11 @@ for mac in args.mac:
         print()
     except (Exception,) as e:
         print(e)
+
+"""
+$ pylywsdxx/examples/lywsd03mmc.py  A4:C1:38:A5:71:D0
+Fetching data from A4:C1:38:A5:71:D0
+Temperature: 21.12°C
+Humidity: 57%
+'Lywsd03client' object has no attribute 'voltage'
+"""
