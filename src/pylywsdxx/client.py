@@ -41,7 +41,9 @@ class Lywsd02client:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    def __init__(self, mac, notification_timeout=15.0):
+    def __init__(self, mac, notification_timeout=11.0, debug=False):
+        self.debug = debug
+        btle.Debugging = self.debug
         self._mac = mac
         self._peripheral = btle.Peripheral()
         self._notification_timeout = notification_timeout
@@ -217,8 +219,8 @@ class Lywsd03client(Lywsd02client):
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=15.0):
-        super().__init__(mac, notification_timeout)
+    def __init__(self, mac, notification_timeout=13.0, debug=False):
+        super().__init__(mac=mac, notification_timeout=notification_timeout, debug=debug)
         self._latest_record = None
 
     def _process_sensor_data(self, data):
