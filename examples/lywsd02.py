@@ -30,7 +30,7 @@ for mac in args.mac:
             data = client.data
             print(f"Temperature: {data.temperature}°C")
             print(f"Humidity: {data.humidity}%")
-            print(f"Battery: {client.battery}%")
+            print(f"Battery: {data.battery}%")
             print()
         elif args.action == "setc":
             client.units = "C"
