@@ -15,15 +15,7 @@ for mac in args.mac:
         data = client.data
         print(f"Temperature: {data.temperature}°C")
         print(f"Humidity: {data.humidity}%")
-        print(f"Battery: {client.battery}% ({client.voltage} V)")
+        print(f"Battery: {data.battery}% ({data.voltage} V)")
         print()
     except (Exception,) as e:
         print(e)
-
-"""
-$ pylywsdxx/examples/lywsd03mmc.py  A4:C1:38:A5:71:D0
-Fetching data from A4:C1:38:A5:71:D0
-Temperature: 21.12°C
-Humidity: 57%
-'Lywsd03client' object has no attribute 'voltage'
-"""
