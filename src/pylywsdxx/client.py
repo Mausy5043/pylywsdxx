@@ -56,15 +56,17 @@ class Lywsd02client:  # pylint: disable=R0902
     @contextlib.contextmanager
     def connect(self):
         if self._context_depth == 0:
-            _LOGGER.debug(f"|-> Connecting to {self._mac}")
-            self._peripheral.connect(deviceAddr=self._mac, timeout=self._notification_timeout)
+            if self.debug:
+                print(f"|-> Connecting to {self._mac}")
+            self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
         self._context_depth += 1
         try:
             yield self
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
-                _LOGGER.debug(f"|-< Disconnecting from {self._mac}")
+                if self.debug:
+                    print(f"|-< Disconnecting from {self._mac}")
                 self._peripheral.disconnect()
 
     @property
@@ -174,7 +176,8 @@ class Lywsd02client:  # pylint: disable=R0902
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    _LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
+                    if self.debug:
+                        print(f"|-- Timeout waiting for {self._mac}")
                     break
 
     def handleNotification(self, handle, data):
@@ -273,7 +276,8 @@ class Lywsd03client(Lywsd02client):
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    _LOGGER.debug(f"|-- Timeout listening to {self._mac}")
+                    if self.debug:
+                        print(f"|-- Timeout listening to {self._mac}")
                     break
 
                 # Find the last date we have data for, and check if it's for the current hour
