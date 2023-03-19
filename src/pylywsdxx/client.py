@@ -56,15 +56,15 @@ class Lywsd02client:  # pylint: disable=R0902
     @contextlib.contextmanager
     def connect(self):
         if self._context_depth == 0:
-            _LOGGER.debug(f"Connecting to {self._mac}")
-            self._peripheral.connect(self._mac)
+            _LOGGER.debug(f"|-> Connecting to {self._mac}")
+            self._peripheral.connect(deviceAddr=self._mac, timeout=self._notification_timeout)
         self._context_depth += 1
         try:
             yield self
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
-                _LOGGER.debug(f"Disconnecting from {self._mac}")
+                _LOGGER.debug(f"|-< Disconnecting from {self._mac}")
                 self._peripheral.disconnect()
 
     @property
@@ -174,7 +174,7 @@ class Lywsd02client:  # pylint: disable=R0902
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    _LOGGER.debug(f"Timeout waiting for {self._mac}")
+                    _LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
                     break
 
     def handleNotification(self, handle, data):
@@ -220,7 +220,7 @@ class Lywsd03client(Lywsd02client):
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=39.0, debug=False):
+    def __init__(self, mac, notification_timeout=34.5, debug=False):
         super().__init__(mac=mac, notification_timeout=notification_timeout, debug=debug)
         self._latest_record = None
 
@@ -273,7 +273,7 @@ class Lywsd03client(Lywsd02client):
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    _LOGGER.debug(f"Timeout listening to {self._mac}")
+                    _LOGGER.debug(f"|-- Timeout listening to {self._mac}")
                     break
 
                 # Find the last date we have data for, and check if it's for the current hour
@@ -295,7 +295,7 @@ class Lywsd03client(Lywsd02client):
     def output_history_progress(self, ts, min_temp, max_temp):
         if not self.enable_history_progress:
             return
-        print(f"{ts}: {min_temp} to {max_temp}")
+        print(f"|-- {ts}: {min_temp} to {max_temp}")
 
     @property
     def start_time(self):
