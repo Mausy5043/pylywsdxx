@@ -174,6 +174,7 @@ class Lywsd02client:  # pylint: disable=R0902
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
+                    _LOGGER.debug(f"Timeout waiting for {self._mac}")
                     break
 
     def handleNotification(self, handle, data):
@@ -219,7 +220,7 @@ class Lywsd03client(Lywsd02client):
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=13.0, debug=False):
+    def __init__(self, mac, notification_timeout=39.0, debug=False):
         super().__init__(mac=mac, notification_timeout=notification_timeout, debug=debug)
         self._latest_record = None
 
@@ -272,6 +273,7 @@ class Lywsd03client(Lywsd02client):
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
+                    _LOGGER.debug(f"Timeout listening to {self._mac}")
                     break
 
                 # Find the last date we have data for, and check if it's for the current hour
