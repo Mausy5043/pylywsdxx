@@ -223,7 +223,7 @@ class Lywsd03client(Lywsd02client):
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=34.5, debug=False):
+    def __init__(self, mac, notification_timeout=12.3, debug=False):
         super().__init__(mac=mac, notification_timeout=notification_timeout, debug=debug)
         self._latest_record = None
 
