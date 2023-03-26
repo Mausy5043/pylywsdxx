@@ -55,6 +55,7 @@ class Lywsd02client:  # pylint: disable=R0902
 
     @contextlib.contextmanager
     def connect(self):
+        """Handle device connecting and disconnecting"""
         if self._context_depth == 0:
             if self.debug:
                 print(f"|-> Connecting to {self._mac}")
@@ -228,27 +229,23 @@ class Lywsd03client(Lywsd02client):
         self._latest_record = None
 
     def _process_sensor_data(self, data):
-        """
-        Process the sensor data.
+        """Process the sensor data.
 
-        Params:
+        Args:
             data (struct): struct containing sensor data
-
-        Returns:
-            None
         """
         temperature, humidity, voltage = struct.unpack_from("<hBh", data)
         temperature /= 100
         voltage /= 1000
-
-        # Estimate the battery percentage remaining
-        # CR2025 / CR2032 maximum theoretical voltage = 3.4 V
-        # ref. Table 1;
-        #  CR2025: https://www.farnell.com/datasheets/1496883.pdf
-        #  CR2032: https://www.farnell.com/datasheets/1496885.pdf
-        # End voltage for these batteries is 2.0 V but most devices
-        # will stop working when below 2.3 V (YMMV).
         battery = round(((voltage - 2.1) / (3.4 - 2.1) * 100), 1)
+        """float: Estimate percentage of the battery charge remaining
+        CR2025 / CR2032 maximum theoretical voltage = 3.4 V
+        ref. Table 1;
+         CR2025: https://www.farnell.com/datasheets/1496883.pdf
+         CR2032: https://www.farnell.com/datasheets/1496885.pdf
+        Lowest voltage for these batteries is 2.0 V but the BT radio
+        on most devices will stop working when below 2.3 V (YMMV).
+        """
         self._data = SensorData(temperature=temperature, humidity=humidity, battery=battery, voltage=voltage)
 
     @property
@@ -304,10 +301,12 @@ class Lywsd03client(Lywsd02client):
 
     @property
     def start_time(self):
-        """
-        Work out the start time of the device by taking the current time, subtracting the time
+        """Work out the start time of the device.
+        This is done by taking the current time, subtracting the time
         taken from the device (the run time), and adding the timezone offset.
-        :return: the start time of the device
+
+        Returns:
+            datetime: the start time of the device
         """
         if not self._start_time:
             start_time_delta = self.time[0] - datetime(1970, 1, 1) - timedelta(hours=self.tz_offset)
@@ -316,15 +315,20 @@ class Lywsd03client(Lywsd02client):
 
     @property
     def time(self):
-        """
-        Disable setting the time and timezone.
-        LYWSD03MMCs don't have visible clocks
-        :return:
+        """Fetch datetime and timezone of a LYWSD03MMC device
+        Returns:
+           device's current datetime and timezone
         """
         return super().time
 
     @time.setter
     def time(self, dt: datetime):  # pylint: disable=W0613
+        """Disable setting the time and timezone.
+        LYWSD03MMCs don't have visible clocks.
+
+        Returns:
+            Nothing
+        """
         return
 
     @property
@@ -333,4 +337,10 @@ class Lywsd03client(Lywsd02client):
 
     @tz_offset.setter
     def tz_offset(self, tz_offset: int):  # pylint: disable=W0613
+        """Disable setting the time and timezone.
+        LYWSD03MMCs don't have visible clocks.
+
+        Returns:
+            Nothing
+        """
         return
