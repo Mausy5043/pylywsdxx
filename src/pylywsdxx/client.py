@@ -7,7 +7,7 @@ import struct
 import time
 from datetime import datetime, timedelta
 
-from bluepy3 import btle
+from bluepy3 import btle  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -281,6 +281,7 @@ class Lywsd03client(Lywsd02client):
                     break
 
                 # Find the last date we have data for, and check if it's for the current hour
+                # noinspection PyTypeChecker
                 if self._latest_record and self._latest_record >= expected_end:
                     break
 
