@@ -17,15 +17,13 @@ This module requires [`bluepy3`](https://pypi.org/project/bluepy3/) which should
 
 ## Installation
 
-```bash
+```
 pip install pylywsdxx
 ```
 
 ## Usage
 
-Please note that versions prior to 0.1.0 are early alpha and virtually guaranteed to be defective!
-
-```python3
+```
 import pylywsdxx as pyly
 
 mac = "A4:C1:38:0D:EA:D0"
@@ -39,11 +37,12 @@ data3 = client3.data
 print(f"Temperature: {data3.temperature}°C")
 ```
 
-Please note that this module has completely and intentionally broken backwards compatibility with previous and existing versions of `lywsd02` and `lywsd03mmc` .
+Please note that this module has completely and intentionally broken backwards compatibility with previous 
+and existing versions of `lywsd02` and `lywsd03mmc` .
 
 ## Acknowledgements
 
-Based on previous work by Mikhail Baranov (`h4`) : [lywsd02](https://github.com/h4/lywsd02)   
+Based on previous work stolen from Mikhail Baranov (`h4`) : [lywsd02](https://github.com/h4/lywsd02)   
 and Duncan Barclay (`uduncanu`) : [lywsd03mmc](https://github.com/uduncanu/lywsd03mmc)   
 
 ## License
