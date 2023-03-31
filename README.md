@@ -7,7 +7,7 @@
 [![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
 
 
-This is a Python3 library to allow interrogation of Xiaomi Mijia LYWSD* sensors via Bluetooth (BLE).
+This is a Python3 library to allow interrogation of Xiaomi Mijia LYWSD* sensors via Bluetooth Low Energy (BLE).
 
 **Note**: This is an unofficial project, and is in no way supported or endorsed by Xiaomi.
 
