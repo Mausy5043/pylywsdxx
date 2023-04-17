@@ -3,7 +3,6 @@
 import collections
 import contextlib
 import logging
-import os
 import struct
 import time
 from datetime import datetime, timedelta
@@ -66,6 +65,11 @@ class Lywsd02client:  # pylint: disable=R0902
         self._context_depth += 1
         try:
             yield self
+        # TODO: except to catch connection errors
+        # kimnaty.kimnaty[1372]: *** While talking to room 1.1 (A4:C1:38:6F:E7:CA) an error occured on 2023-04-15 18:20:35
+        # kimnaty.kimnaty[1372]:      -btle- Timed out while trying to connect to peripheral A4:C1:38:6F:E7:CA, addr type: public, interface None, >
+        except Exception as her:
+            print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
