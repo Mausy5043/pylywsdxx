@@ -21,7 +21,9 @@ UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes          
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
 
-class SensorData(collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])):
+class SensorData(
+    collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])
+):
     """Class to store sensor data..
     For LYWSD03MMC devices also battery information is available.
     """
@@ -63,6 +65,11 @@ class Lywsd02client:  # pylint: disable=R0902
         self._context_depth += 1
         try:
             yield self
+        # TODO: except to catch connection errors
+        # kimnaty.kimnaty[1372]: *** While talking to room 1.1 (A4:C1:38:6F:E7:CA) an error occured on 2023-04-15 18:20:35
+        # kimnaty.kimnaty[1372]:      -btle- Timed out while trying to connect to peripheral A4:C1:38:6F:E7:CA, addr type: public, interface None, >
+        except Exception as her:
+            print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
@@ -169,7 +176,9 @@ class Lywsd02client:  # pylint: disable=R0902
             self._subscribe(UUID_DATA, self._process_sensor_data)
 
             if not self._peripheral.waitForNotifications(self._notification_timeout):
-                raise TimeoutError(f"No data from device for {self._notification_timeout} seconds")
+                raise TimeoutError(
+                    f"No data from device for {self._notification_timeout} seconds"
+                )
 
     def _get_history_data(self):
         with self.connect():
@@ -197,7 +206,9 @@ class Lywsd02client:  # pylint: disable=R0902
     def _process_sensor_data(self, data):
         temperature, humidity = struct.unpack_from("hB", data)
         temperature /= 100
-        self._data = SensorData(temperature=temperature, humidity=humidity, battery=None, voltage=None)
+        self._data = SensorData(
+            temperature=temperature, humidity=humidity, battery=None, voltage=None
+        )
 
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
@@ -246,7 +257,9 @@ class Lywsd03client(Lywsd02client):
         Lowest voltage for these batteries is 2.0 V but the BT radio
         on most devices will stop working when below 2.3 V (YMMV).
         """
-        self._data = SensorData(temperature=temperature, humidity=humidity, battery=battery, voltage=voltage)
+        self._data = SensorData(
+            temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
+        )
 
     @property
     def battery(self):
@@ -309,7 +322,9 @@ class Lywsd03client(Lywsd02client):
             datetime: the start time of the device
         """
         if not self._start_time:
-            start_time_delta = self.time[0] - datetime(1970, 1, 1) - timedelta(hours=self.tz_offset)
+            start_time_delta = (
+                self.time[0] - datetime(1970, 1, 1) - timedelta(hours=self.tz_offset)
+            )
             self._start_time = datetime.now() - start_time_delta
         return self._start_time
 
