@@ -100,7 +100,7 @@ class Lywsd02client:  # pylint: disable=R0902
     @units.setter
     def units(self, value):
         if value.upper() not in self.UNITS_CODES:
-            raise ValueError(f"Units value must be one of {self.UNITS_CODES.keys()}")
+            raise ValueError(f"(pylywsdxx.client.py) Units value must be one of {self.UNITS_CODES.keys()}")
 
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
@@ -177,7 +177,7 @@ class Lywsd02client:  # pylint: disable=R0902
 
             if not self._peripheral.waitForNotifications(self._notification_timeout):
                 raise TimeoutError(
-                    f"No data from device for {self._notification_timeout} seconds"
+                    f"(pylywsdxx.client.py) No data from device for {self._notification_timeout} seconds"
                 )
 
     def _get_history_data(self):
