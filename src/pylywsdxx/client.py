@@ -72,11 +72,6 @@ class Lywsd02client:  # pylint: disable=R0902
                         print(f"|-- Timeout waiting for {self._mac}")
                     break
 
-    def handle_notification(self, handle, data):
-        func = self._handles.get(handle)
-        if func:
-            func(data)
-
     def _subscribe(self, uuid, callback):
         self._peripheral.setDelegate(self)
         ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
@@ -100,6 +95,11 @@ class Lywsd02client:  # pylint: disable=R0902
         max_temp /= 100
 
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
+
+    def handle_notification(self, handle, data):
+        func = self._handles.get(handle)
+        if func:
+            func(data)
 
     @contextlib.contextmanager
     def connect(self):
