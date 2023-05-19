@@ -2,11 +2,14 @@
 
 import collections
 import contextlib
+import logging
 import struct
 import time
 from datetime import datetime, timedelta
 
 from bluepy3 import btle  # noqa
+
+_LOGGER = logging.getLogger(__name__)
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
@@ -21,8 +24,7 @@ UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes          
 class SensorData(
     collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])
 ):
-    """Class to store sensor data.
-    For LYWSD02 devices temperature and humidity readings are available.
+    """Class to store sensor data..
     For LYWSD03MMC devices also battery information is available.
     """
 
@@ -98,9 +100,7 @@ class Lywsd02client:  # pylint: disable=R0902
     @units.setter
     def units(self, value):
         if value.upper() not in self.UNITS_CODES:
-            raise ValueError(
-                f"(pylywsdxx.client.py) Units value must be one of {self.UNITS_CODES.keys()}"
-            )
+            raise ValueError(f"(pylywsdxx.client.py) Units value must be one of {self.UNITS_CODES.keys()}")
 
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
@@ -190,7 +190,7 @@ class Lywsd02client:  # pylint: disable=R0902
                         print(f"|-- Timeout waiting for {self._mac}")
                     break
 
-    def handle_notification(self, handle, data):
+    def handleNotification(self, handle, data):
         func = self._handles.get(handle)
         if func:
             func(data)
@@ -331,9 +331,8 @@ class Lywsd03client(Lywsd02client):
     @property
     def time(self):
         """Fetch datetime and timezone of a LYWSD03MMC device
-
         Returns:
-           Device's current datetime and timezone
+           device's current datetime and timezone
         """
         return super().time
 
@@ -341,9 +340,6 @@ class Lywsd03client(Lywsd02client):
     def time(self, dt: datetime):  # pylint: disable=W0613
         """Disable setting the time and timezone.
         LYWSD03MMCs don't have visible clocks.
-
-        Args:
-            dt (datetime): Does nothing
 
         Returns:
             Nothing
