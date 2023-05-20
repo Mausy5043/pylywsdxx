@@ -21,7 +21,8 @@ UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes          
 class SensorData(
     collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])
 ):
-    """Class to store sensor data..
+    """Class to store sensor data.
+    For LYWSD02 devices temperature and humidity readings are available.
     For LYWSD03MMC devices also battery information is available.
     """
 
@@ -328,8 +329,9 @@ class Lywsd03client(Lywsd02client):
     @property
     def time(self):
         """Fetch datetime and timezone of a LYWSD03MMC device
+
         Returns:
-           device's current datetime and timezone
+           Device's current datetime and timezone
         """
         return super().time
 
@@ -337,6 +339,9 @@ class Lywsd03client(Lywsd02client):
     def time(self, dt: datetime):  # pylint: disable=W0613
         """Disable setting the time and timezone.
         LYWSD03MMCs don't have visible clocks.
+
+        Args:
+            dt (datetime): Does nothing
 
         Returns:
             Nothing
