@@ -18,6 +18,27 @@ UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes          
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
 
+class PyLyException(Exception):
+    """Base class for all pylywsdxx exceptions"""
+
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        msg = f"(pylywsdxx) {self.message}"
+        return msg
+
+
+class PyLyTimeout(PyLyException):
+    def __init__(self, message):
+        PyLyException.__init__(self, message)
+
+
+class PyLyValueError(PyLyException):
+    def __init__(self, message):
+        PyLyException.__init__(self, message)
+
+
 class SensorData(
     collections.namedtuple("SensorDataBase", ["temperature", "humidity", "battery", "voltage"])
 ):
