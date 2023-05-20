@@ -2,6 +2,7 @@
 
 import collections
 import contextlib
+import warnings
 import struct
 import time
 from datetime import datetime, timedelta
