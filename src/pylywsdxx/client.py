@@ -304,7 +304,8 @@ class Lywsd03client(Lywsd02client):
         temperature /= 100
         voltage /= 1000
         battery = round(((voltage - 2.1) / (3.4 - 2.1) * 100), 1)
-        """float: Estimate percentage of the battery charge remaining
+        """
+        battery (float): Estimate percentage of the battery charge remaining
         CR2025 / CR2032 maximum theoretical voltage = 3.4 V
         ref. Table 1;
          CR2025: https://www.farnell.com/datasheets/1496883.pdf
