@@ -2,14 +2,11 @@
 
 import collections
 import contextlib
-import logging
 import struct
 import time
 from datetime import datetime, timedelta
 
 from bluepy3 import btle  # noqa
-
-_LOGGER = logging.getLogger(__name__)
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
