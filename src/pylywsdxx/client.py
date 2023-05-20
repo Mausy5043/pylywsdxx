@@ -128,15 +128,34 @@ class Lywsd02client:  # pylint: disable=R0902
         if self._context_depth == 0:
             if self.debug:
                 print(f"|-> Connecting to {self._mac}")
-            self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
-            # TO DO: consider to catch connection errors here
-            # kimnaty.kimnaty[1372]: *** While talking to room 1.1 (A4:C1:38:6F:E7:CA) an error occured on 2023-04-15 18:20:35
-            # kimnaty.kimnaty[1372]:      -btle- Timed out while trying to connect to peripheral A4:C1:38:6F:E7:CA, addr type: public, interface None, >
+            try:
+                self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
+            except btle.BTLEConnectTimeout as her:
+                # Catch connection errors here
+                # kimnaty.kimnaty[74525]: *** While talking to room 0.5 (A4:C1:38:99:AC:4D) error
+                #                         (btle.py) Timed out while trying to connect to
+                #                         peripheral ...blabla... of type BTLEConnectTimeout occured
+                #                         on ___
+                warnings.warn(
+                    f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                # re-raise for now
+                raise PyLyTimeout(f"-- {her} --") from her
+            except Exception as her:
+                warnings.warn(
+                    f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+
         self._context_depth += 1
         try:
             yield self
         except Exception as her:
-            print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
+            # print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
+            warnings.warn(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured", RuntimeWarning, stacklevel=2)
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
