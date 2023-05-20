@@ -266,6 +266,15 @@ class Lywsd03client(Lywsd02client):
     UNITS = {b"\x01": "F", b"\x00": "C"}
     UNITS_CODES = {"F": b"\x01", "C": b"\x00"}
 
+    # CR2025 / CR2032 maximum theoretical voltage = 3.4 V
+    # ref. Table 1;
+    #  CR2025: https://www.farnell.com/datasheets/1496883.pdf
+    #  CR2032: https://www.farnell.com/datasheets/1496885.pdf
+    # Lowest voltage for these batteries is 2.0 V but the BT radio
+    # on most devices will stop working when below 2.3 V (YMMV).
+    BATTERY_FULL = 3.4
+    BATTERY_LOW = 2.1
+
     # Locally cache the start time of the device.
     # This value won't change, and caching improves the performance getting the history data
     _start_time = False
@@ -323,16 +332,8 @@ class Lywsd03client(Lywsd02client):
         temperature, humidity, voltage = struct.unpack_from("<hBh", data)
         temperature /= 100
         voltage /= 1000
-        battery = round(((voltage - 2.1) / (3.4 - 2.1) * 100), 1)
-        """
-        battery (float): Estimate percentage of the battery charge remaining
-        CR2025 / CR2032 maximum theoretical voltage = 3.4 V
-        ref. Table 1;
-         CR2025: https://www.farnell.com/datasheets/1496883.pdf
-         CR2032: https://www.farnell.com/datasheets/1496885.pdf
-        Lowest voltage for these batteries is 2.0 V but the BT radio
-        on most devices will stop working when below 2.3 V (YMMV).
-        """
+        # battery (float): Estimate percentage of the battery charge remaining
+        battery = round(((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1)
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
         )
