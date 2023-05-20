@@ -232,7 +232,7 @@ class Lywsd02client:  # pylint: disable=R0902
     @units.setter
     def units(self, value):
         if value.upper() not in self.UNITS_CODES:
-            raise ValueError(f"(pylywsdxx.client.py) Units value must be one of {self.UNITS_CODES.keys()}")
+            raise PyLyValueError(f"Units value must be one of {self.UNITS_CODES.keys()}")
 
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
