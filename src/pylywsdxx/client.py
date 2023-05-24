@@ -39,6 +39,7 @@ class PyLyConnectError(PyLyException):
     def __init__(self, message):
         PyLyException.__init__(self, message)
 
+
 class PyLyValueError(PyLyException):
     def __init__(self, message):
         PyLyException.__init__(self, message)
@@ -122,7 +123,9 @@ class Lywsd02client:  # pylint: disable=R0902
 
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
-    def handleNotification(self, handle, data):  # noqa - FIXME: why name of method can't be changed (?!)
+    def handleNotification(
+        self, handle, data
+    ):  # noqa - FIXME: why name of method can't be changed (?!)
         func = self._handles.get(handle)
         if func:
             func(data)
@@ -165,7 +168,11 @@ class Lywsd02client:  # pylint: disable=R0902
             yield self
         except Exception as her:
             # print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
-            warnings.warn(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured", RuntimeWarning, stacklevel=2)
+            warnings.warn(
+                f"(pylywsdxx.client) An exception of type {type(her).__name__} occured",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
@@ -342,7 +349,9 @@ class Lywsd03client(Lywsd02client):
         temperature /= 100
         voltage /= 1000
         # battery (float): Estimate percentage of the battery charge remaining
-        battery = round(((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1)
+        battery = round(
+            ((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1
+        )
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
         )
