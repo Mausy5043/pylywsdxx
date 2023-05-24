@@ -95,8 +95,10 @@ class Lywsd02client:  # pylint: disable=R0902
             self._subscribe(UUID_DATA, self._process_sensor_data)
 
             if not self._peripheral.waitForNotifications(self._notification_timeout):
-                raise TimeoutError(
-                    f"(pylywsdxx.client.py) No data from device for {self._notification_timeout} seconds"
+                if self.debug:
+                    print(f"|-- Timeout waiting for {self._mac}")
+                raise PyLyTimeout(
+                    f"No data from device for {self._notification_timeout} seconds"
                 )
 
     def _process_history_data(self, data):
