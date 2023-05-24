@@ -35,6 +35,10 @@ class PyLyTimeout(PyLyException):
         PyLyException.__init__(self, message)
 
 
+class PyLyConnectError(PyLyException):
+    def __init__(self, message):
+        PyLyException.__init__(self, message)
+
 class PyLyValueError(PyLyException):
     def __init__(self, message):
         PyLyException.__init__(self, message)
@@ -133,23 +137,28 @@ class Lywsd02client:  # pylint: disable=R0902
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
             except btle.BTLEConnectTimeout as her:
                 # Catch connection errors here
-                # kimnaty.kimnaty[74525]: *** While talking to room 0.5 (A4:C1:38:99:AC:4D) error
-                #                         (btle.py) Timed out while trying to connect to
-                #                         peripheral ...blabla... of type BTLEConnectTimeout occured
-                #                         on ___
-                warnings.warn(
-                    f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
+                # warnings.warn(
+                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                #     RuntimeWarning,
+                #     stacklevel=2,
+                # )
                 # re-raise for now
                 raise PyLyTimeout(f"-- {her} --") from her
+            except btle.BTLEConnectError as her:
+                # warnings.warn(
+                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                #     RuntimeWarning,
+                #     stacklevel=2,
+                # )
+                # re-raise for now
+                raise PyLyConnectError(f"-- {her} --") from her
             except Exception as her:
-                warnings.warn(
-                    f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                    RuntimeWarning,
-                    stacklevel=2,
-                )
+                # warnings.warn(
+                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                #     RuntimeWarning,
+                #     stacklevel=2,
+                # )
+                raise PyLyException(f"-- {her} --") from her
 
         self._context_depth += 1
         try:
