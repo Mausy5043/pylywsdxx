@@ -123,9 +123,8 @@ class Lywsd02client:  # pylint: disable=R0902
 
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
-    def handleNotification(
-        self, handle, data
-    ):  # noqa - FIXME: why name of method can't be changed (?!)
+    # FIXME: why name of method can't be changed (?!)
+    def handleNotification(self, handle, data):  # noqa
         func = self._handles.get(handle)
         if func:
             func(data)
