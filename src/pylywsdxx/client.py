@@ -2,6 +2,7 @@
 
 import collections
 import contextlib
+import warnings
 import struct
 import time
 from datetime import datetime, timedelta
@@ -16,6 +17,31 @@ UUID_DATA = "EBE0CCC1-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _        3 bytes          
 UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte                READ
 UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes               READ
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
+
+
+class PyLyException(Exception):
+    """Base class for all pylywsdxx exceptions"""
+
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        msg = f"(pylywsdxx) {self.message}"
+        return msg
+
+
+class PyLyTimeout(PyLyException):
+    def __init__(self, message):
+        PyLyException.__init__(self, message)
+
+
+class PyLyConnectError(PyLyException):
+    def __init__(self, message):
+        PyLyException.__init__(self, message)
+
+class PyLyValueError(PyLyException):
+    def __init__(self, message):
+        PyLyException.__init__(self, message)
 
 
 class SensorData(
@@ -53,15 +79,6 @@ class Lywsd02client:  # pylint: disable=R0902
         self._history_data = collections.OrderedDict()
         self._context_depth = 0
 
-    def _get_sensor_data(self):
-        with self.connect():
-            self._subscribe(UUID_DATA, self._process_sensor_data)
-
-            if not self._peripheral.waitForNotifications(self._notification_timeout):
-                raise TimeoutError(
-                    f"(pylywsdxx.client.py) No data from device for {self._notification_timeout} seconds"
-                )
-
     def _get_history_data(self):
         with self.connect():
             self._subscribe(UUID_HISTORY, self._process_history_data)
@@ -72,20 +89,14 @@ class Lywsd02client:  # pylint: disable=R0902
                         print(f"|-- Timeout waiting for {self._mac}")
                     break
 
-    def _subscribe(self, uuid, callback):
-        self._peripheral.setDelegate(self)
-        ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
-        self._handles[ch.getHandle()] = callback
-        desc = ch.getDescriptors(forUUID=0x2902)[0]
+    def _get_sensor_data(self):
+        with self.connect():
+            self._subscribe(UUID_DATA, self._process_sensor_data)
 
-        desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
-
-    def _process_sensor_data(self, data):
-        temperature, humidity = struct.unpack_from("hB", data)
-        temperature /= 100
-        self._data = SensorData(
-            temperature=temperature, humidity=humidity, battery=None, voltage=None
-        )
+            if not self._peripheral.waitForNotifications(self._notification_timeout):
+                raise TimeoutError(
+                    f"(pylywsdxx.client.py) No data from device for {self._notification_timeout} seconds"
+                )
 
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
@@ -96,7 +107,22 @@ class Lywsd02client:  # pylint: disable=R0902
 
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
 
-    def handle_notification(self, handle, data):
+    def _process_sensor_data(self, data):
+        temperature, humidity = struct.unpack_from("hB", data)
+        temperature /= 100
+        self._data = SensorData(
+            temperature=temperature, humidity=humidity, battery=None, voltage=None
+        )
+
+    def _subscribe(self, uuid, callback):
+        self._peripheral.setDelegate(self)
+        ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
+        self._handles[ch.getHandle()] = callback
+        desc = ch.getDescriptors(forUUID=0x2902)[0]
+
+        desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
+
+    def handleNotification(self, handle, data):  # noqa - FIXME: why name of method can't be changed (?!)
         func = self._handles.get(handle)
         if func:
             func(data)
@@ -107,17 +133,39 @@ class Lywsd02client:  # pylint: disable=R0902
         if self._context_depth == 0:
             if self.debug:
                 print(f"|-> Connecting to {self._mac}")
-            self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
-            # TO DO: consider to catch connection errors here
-            # kimnaty.kimnaty[74525]: *** While talking to room 0.5 (A4:C1:38:99:AC:4D) error
-            #                         (btle.py) Timed out while trying to connect to
-            #                         peripheral ...blabla... of type BTLEConnectTimeout occured
-            #                         on ___
+            try:
+                self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
+            except btle.BTLEConnectTimeout as her:
+                # Catch connection errors here
+                # warnings.warn(
+                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                #     RuntimeWarning,
+                #     stacklevel=2,
+                # )
+                # re-raise for now
+                raise PyLyTimeout(f"-- {her} --") from her
+            except btle.BTLEConnectError as her:
+                # warnings.warn(
+                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                #     RuntimeWarning,
+                #     stacklevel=2,
+                # )
+                # re-raise for now
+                raise PyLyConnectError(f"-- {her} --") from her
+            except Exception as her:
+                # warnings.warn(
+                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
+                #     RuntimeWarning,
+                #     stacklevel=2,
+                # )
+                raise PyLyException(f"-- {her} --") from her
+
         self._context_depth += 1
         try:
             yield self
         except Exception as her:
-            print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
+            # print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
+            warnings.warn(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured", RuntimeWarning, stacklevel=2)
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
@@ -133,17 +181,18 @@ class Lywsd02client:  # pylint: disable=R0902
         return ord(value)
 
     @property
-    def humidity(self):
-        return self.data.humidity
-
-    @property
-    def temperature(self):
-        return self.data.temperature
-
-    @property
     def data(self):
         self._get_sensor_data()
         return self._data
+
+    @property
+    def history_data(self):
+        self._get_history_data()
+        return self._history_data
+
+    @property
+    def humidity(self):
+        return self.data.humidity
 
     @property
     def num_stored_entries(self):
@@ -154,27 +203,22 @@ class Lywsd02client:  # pylint: disable=R0902
         return total_records, current_records
 
     @property
-    def history_data(self):
-        self._get_history_data()
-        return self._history_data
+    def temperature(self):
+        return self.data.temperature
 
     @property
-    def units(self):
+    def history_index(self):
         with self.connect():
-            ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
+            ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
             value = ch.read()
-        return self.UNITS[value]
+        _idx = 0 if len(value) == 0 else struct.unpack_from("I", value)
+        return _idx
 
-    @units.setter
-    def units(self, value):
-        if value.upper() not in self.UNITS_CODES:
-            raise ValueError(
-                f"(pylywsdxx.client.py) Units value must be one of {self.UNITS_CODES.keys()}"
-            )
-
+    @history_index.setter
+    def history_index(self, value):
         with self.connect():
-            ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
-            ch.write(self.UNITS_CODES[value.upper()], withResponse=True)
+            ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
+            ch.write(struct.pack("I", value), withResponse=True)
 
     @property
     def time(self):
@@ -208,18 +252,20 @@ class Lywsd02client:  # pylint: disable=R0902
         self._tz_offset = tz_offset
 
     @property
-    def history_index(self):
+    def units(self):
         with self.connect():
-            ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
+            ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
             value = ch.read()
-        _idx = 0 if len(value) == 0 else struct.unpack_from("I", value)
-        return _idx
+        return self.UNITS[value]
 
-    @history_index.setter
-    def history_index(self, value):
+    @units.setter
+    def units(self, value):
+        if value.upper() not in self.UNITS_CODES:
+            raise PyLyValueError(f"Units value must be one of {self.UNITS_CODES.keys()}")
+
         with self.connect():
-            ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
-            ch.write(struct.pack("I", value), withResponse=True)
+            ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
+            ch.write(self.UNITS_CODES[value.upper()], withResponse=True)
 
 
 class Lywsd03client(Lywsd02client):
@@ -228,6 +274,15 @@ class Lywsd03client(Lywsd02client):
     # Temperature units specific to LYWSD03MMC devices
     UNITS = {b"\x01": "F", b"\x00": "C"}
     UNITS_CODES = {"F": b"\x01", "C": b"\x00"}
+
+    # CR2025 / CR2032 maximum theoretical voltage = 3.4 V
+    # ref. Table 1;
+    #  CR2025: https://www.farnell.com/datasheets/1496883.pdf
+    #  CR2032: https://www.farnell.com/datasheets/1496885.pdf
+    # Lowest voltage for these batteries is 2.0 V but the BT radio
+    # on most devices will stop working when below 2.3 V (YMMV).
+    BATTERY_FULL = 3.4
+    BATTERY_LOW = 2.1
 
     # Locally cache the start time of the device.
     # This value won't change, and caching improves the performance getting the history data
@@ -265,28 +320,6 @@ class Lywsd03client(Lywsd02client):
                 if self._latest_record and self._latest_record >= expected_end:
                     break
 
-    def _process_sensor_data(self, data):
-        """Process the sensor data.
-
-        Args:
-            data (struct): struct containing sensor data
-        """
-        temperature, humidity, voltage = struct.unpack_from("<hBh", data)
-        temperature /= 100
-        voltage /= 1000
-        battery = round(((voltage - 2.1) / (3.4 - 2.1) * 100), 1)
-        """float: Estimate percentage of the battery charge remaining
-        CR2025 / CR2032 maximum theoretical voltage = 3.4 V
-        ref. Table 1;
-         CR2025: https://www.farnell.com/datasheets/1496883.pdf
-         CR2032: https://www.farnell.com/datasheets/1496885.pdf
-        Lowest voltage for these batteries is 2.0 V but the BT radio
-        on most devices will stop working when below 2.3 V (YMMV).
-        """
-        self._data = SensorData(
-            temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
-        )
-
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
@@ -298,6 +331,21 @@ class Lywsd03client(Lywsd02client):
         self._latest_record = ts
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
         self.output_history_progress(ts, min_temp, max_temp)
+
+    def _process_sensor_data(self, data):
+        """Process the sensor data.
+
+        Args:
+            data (struct): struct containing sensor data
+        """
+        temperature, humidity, voltage = struct.unpack_from("<hBh", data)
+        temperature /= 100
+        voltage /= 1000
+        # battery (float): Estimate percentage of the battery charge remaining
+        battery = round(((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1)
+        self._data = SensorData(
+            temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
+        )
 
     def output_history_progress(self, ts, min_temp, max_temp):
         if not self.enable_history_progress:
