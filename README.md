@@ -28,17 +28,17 @@ import pylywsdxx as pyly
 
 mac = "A4:C1:38:0D:EA:D0"
 
-client2 = pyly.Lywsd02client(mac)
-data2 = client2.data
+device2 = pyly.Lywsd02(mac)
+data2 = device2.data
 print(f"Temperature: {data2.temperature}°C")
 
-client3 = pyly.Lywsd03client(mac)
-data3 = client3.data
+device3 = pyly.Lywsd03(mac)
+data3 = device3.data
 print(f"Temperature: {data3.temperature}°C")
 ```
 
 Please note that this module has completely and intentionally broken backwards compatibility with previous 
-and existing versions of `lywsd02` and `lywsd03mmc` and with  `pylywsdxx=<1.8.*`.
+and existing versions of `lywsd02` and `lywsd03mmc` and with v1.* versions of itself.
 
 ## Acknowledgements
 
