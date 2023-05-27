@@ -22,6 +22,7 @@ UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes          
 
 warnings.filterwarnings("always", category=RuntimeWarning)
 
+
 class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions"""
 
@@ -55,6 +56,7 @@ class SensorData(
     For LYWSD02 devices temperature and humidity readings are available.
     For LYWSD03MMC devices also battery information is available.
     """
+
     __slots__ = ()
 
 
@@ -115,7 +117,9 @@ class Lywsd02:  # pylint: disable=R0902
             if not self._peripheral.waitForNotifications(self._notification_timeout):
                 if self.debug:
                     print(f"|-- Timeout waiting for {self._mac}")
-                raise PyLyTimeout(f"No data from device for {self._notification_timeout} seconds")
+                raise PyLyTimeout(
+                    f"No data from device for {self._notification_timeout} seconds"
+                )
 
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
@@ -323,7 +327,9 @@ class Lywsd03(Lywsd02):
 
     # Call the parent init with a bigger notification timeout
     def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False):
-        super().__init__(mac=mac, notification_timeout=notification_timeout, reusable=reusable, debug=debug)
+        super().__init__(
+            mac=mac, notification_timeout=notification_timeout, reusable=reusable, debug=debug
+        )
         self._latest_record = None
 
     def _get_history_data(self):
