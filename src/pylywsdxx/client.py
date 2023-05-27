@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 
 from bluepy3 import btle  # noqa
 
+from .bt_hardware import ble_reset
+
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
 UUID_HISTORY_3 = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _   Last idx 152          READ NOTIFY
@@ -52,7 +54,6 @@ class SensorData(
     For LYWSD02 devices temperature and humidity readings are available.
     For LYWSD03MMC devices also battery information is available.
     """
-
     __slots__ = ()
 
 
@@ -68,7 +69,7 @@ class Lywsd02client:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    def __init__(self, mac, notification_timeout=11.0, debug=False):
+    def __init__(self, mac, notification_timeout=11.0, reusable=False, debug=False):
         self.debug = debug
         btle.Debugging = self.debug
         self._mac = mac
@@ -79,6 +80,13 @@ class Lywsd02client:  # pylint: disable=R0902
         self._data = SensorData(None, None, None, None)
         self._history_data = collections.OrderedDict()
         self._context_depth = 0
+        # the number of times a device must cause an error before countermeasures are taken
+        self.reusable = reusable
+        self._tries = 1     # default
+        self._set_tries()
+
+    def _set_tries(self):
+        self._tries = 3 if self.reusable else 1
 
     def _get_history_data(self):
         with self.connect():
@@ -140,22 +148,35 @@ class Lywsd02client:  # pylint: disable=R0902
             try:
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
             except btle.BTLEConnectTimeout as her:
-                # Catch connection errors here
-                # warnings.warn(
-                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                #     RuntimeWarning,
-                #     stacklevel=2,
-                # )
+                # Catch connection timeouts here
+                self._tries -= 1
+                if self._tries > 0:
+                    warnings.warn(
+                        f"Device timed out on connect ({self._mac}).",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
                 # re-raise for now
-                raise PyLyTimeout(f"-- {her} --") from her
+                if self._tries <= 0:
+                    # raise for now; reset hardware and device tries-counter later
+                    raise PyLyTimeout(f"-- {her} --") from her
+                    ble_reset()
+                    self._set_tries()
             except btle.BTLEConnectError as her:
-                # warnings.warn(
-                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                #     RuntimeWarning,
-                #     stacklevel=2,
-                # )
+                # Catch connection errors here
+                self._tries -= 1
+                if self._tries > 0:
+                    warnings.warn(
+                        f"Device connection failed ({self._mac}).",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
                 # re-raise for now
-                raise PyLyConnectError(f"-- {her} --") from her
+                if self._tries <= 0:
+                    # raise for now; reset hardware and device tries-counter later
+                    raise PyLyConnectError(f"-- {her} --") from her
+                    ble_reset()
+                    self._set_tries()
             except Exception as her:
                 # warnings.warn(
                 #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
@@ -168,12 +189,14 @@ class Lywsd02client:  # pylint: disable=R0902
         try:
             yield self
         except Exception as her:
-            # print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
-            warnings.warn(
-                f"(pylywsdxx.client) An exception of type {type(her).__name__} occured",
-                RuntimeWarning,
-                stacklevel=2,
-            )
+            # Non-anticipated exceptions must be raised to draw attention to them.
+            # warnings.warn(
+            #     f"(pylywsdxx.client) An exception of type {type(her).__name__} occured",
+            #     RuntimeWarning,
+            #     stacklevel=2,
+            # )
+            # re-raise for now
+            raise PyLyException(f"-- {her} --") from her
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
