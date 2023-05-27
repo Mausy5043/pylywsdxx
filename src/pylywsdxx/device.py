@@ -71,6 +71,7 @@ class Lywsd02:  # pylint: disable=R0902
 
     def __init__(self, mac, notification_timeout=11.0, reusable=False, debug=False):
         self.debug = debug
+        self.reusable = reusable
         btle.Debugging = self.debug
         self._mac = mac
         self._peripheral = btle.Peripheral()
@@ -82,16 +83,17 @@ class Lywsd02:  # pylint: disable=R0902
         self._context_depth = 0
 
         # define the number of times a device must cause an error before countermeasures are taken
-        self.reusable = reusable
-        self._tries = 1     # default
+        self._tries = 3     # default
         self._set_tries()
         # define the number of times a device may cause a countermeasure before we give up and raise an error
-        self._resets = 1
+        self._resets = 3
         self._set_resets()
 
     def _set_tries(self):
         """Initialise a retry counter"""
-        self._tries = 3 if self.reusable else 1
+        self._tries = 1
+        if self.reusable:
+            self._tries = 3
 
     def _set_resets(self):
         """Initialise a reset counter"""
@@ -114,9 +116,7 @@ class Lywsd02:  # pylint: disable=R0902
             if not self._peripheral.waitForNotifications(self._notification_timeout):
                 if self.debug:
                     print(f"|-- Timeout waiting for {self._mac}")
-                raise PyLyTimeout(
-                    f"No data from device for {self._notification_timeout} seconds"
-                )
+                raise PyLyTimeout(f"No data from device for {self._notification_timeout} seconds")
 
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
@@ -329,7 +329,7 @@ class Lywsd03(Lywsd02):
 
     # Call the parent init with a bigger notification timeout
     def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False):
-        super().__init__(mac=mac, notification_timeout=notification_timeout, debug=debug)
+        super().__init__(mac=mac, notification_timeout=notification_timeout, reusable=reusable, debug=debug)
         self._latest_record = None
 
     def _get_history_data(self):
