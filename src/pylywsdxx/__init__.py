@@ -2,9 +2,9 @@
 
 from .device import Lywsd02
 from .device import Lywsd03
+from .device import PyLyConnectError
 from .device import PyLyException
 from .device import PyLyTimeout
-from .device import PyLyConnectError
 from .device import PyLyValueError
 from .radioctl import ble_reset
 
