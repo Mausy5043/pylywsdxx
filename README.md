@@ -38,7 +38,7 @@ print(f"Temperature: {data3.temperature}°C")
 ```
 
 Please note that this module has completely and intentionally broken backwards compatibility with previous 
-and existing versions of `lywsd02` and `lywsd03mmc` .
+and existing versions of `lywsd02` and `lywsd03mmc` and with  `pylywsdxx=<1.8.*`.
 
 ## Acknowledgements
 
