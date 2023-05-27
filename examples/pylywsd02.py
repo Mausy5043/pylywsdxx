@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 for mac in args.mac:
     try:
-        client = pyly.Lywsd02client(mac)
+        client = pyly.Lywsd02(mac)
         if args.action == "sync":
             print(f"Synchronizing time of {mac}")
             client.time = datetime.now()
