@@ -161,7 +161,7 @@ class Lywsd02:  # pylint: disable=R0902
                 self._tries -= 1
                 if self._tries > 0:
                     warnings.warn(
-                        f"Device timed out on connect ({self._mac}).",
+                        f"Device ({self._mac}) timed out on connect.",
                         RuntimeWarning,
                         stacklevel=2,
                     )
@@ -177,7 +177,7 @@ class Lywsd02:  # pylint: disable=R0902
                 self._tries -= 1
                 if self._tries > 0:
                     warnings.warn(
-                        f"Device connection failed ({self._mac}).",
+                        f"Device ({self._mac}) connection failed.",
                         RuntimeWarning,
                         stacklevel=2,
                     )
