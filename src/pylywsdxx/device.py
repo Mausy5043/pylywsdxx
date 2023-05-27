@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from bluepy3 import btle  # noqa
 
-from .bt_hardware import ble_reset
+from .radioctl import ble_reset
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
@@ -57,7 +57,7 @@ class SensorData(
     __slots__ = ()
 
 
-class Lywsd02client:  # pylint: disable=R0902
+class Lywsd02:  # pylint: disable=R0902
     """Class to communicate with LYWSD02 devices."""
 
     UNITS = {
@@ -299,7 +299,7 @@ class Lywsd02client:  # pylint: disable=R0902
             ch.write(self.UNITS_CODES[value.upper()], withResponse=True)
 
 
-class Lywsd03client(Lywsd02client):
+class Lywsd03(Lywsd02):
     """Class to communicate with LYWSD03MMC devices."""
 
     # Temperature units specific to LYWSD03MMC devices

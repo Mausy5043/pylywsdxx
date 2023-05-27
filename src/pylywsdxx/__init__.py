@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-from .client import Lywsd02client
-from .client import Lywsd03client
-from .client import PyLyException
-from .client import PyLyTimeout
-from .client import PyLyConnectError
-from .client import PyLyValueError
-from .bt_hardware import ble_reset
+from .device import Lywsd02
+from .device import Lywsd03
+from .device import PyLyException
+from .device import PyLyTimeout
+from .device import PyLyConnectError
+from .device import PyLyValueError
+from .radioctl import ble_reset
 
 __all__ = (
-    "Lywsd02client",
-    "Lywsd03client",
+    "Lywsd02",
+    "Lywsd03",
     "PyLyException",
     "PyLyTimeout",
     "PyLyConnectError",
