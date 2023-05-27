@@ -83,7 +83,7 @@ class Lywsd02:  # pylint: disable=R0902
         self._context_depth = 0
 
         # define the number of times a device must cause an error before countermeasures are taken
-        self._tries = 3     # default
+        self._tries = 1     # default
         self._set_tries()
         # define the number of times a device may cause a countermeasure before we give up and raise an error
         self._resets = 3
@@ -91,9 +91,7 @@ class Lywsd02:  # pylint: disable=R0902
 
     def _set_tries(self):
         """Initialise a retry counter"""
-        self._tries = 1
-        if self.reusable:
-            self._tries = 3
+        self._tries = 3 if self.reusable else 1
 
     def _set_resets(self):
         """Initialise a reset counter"""
