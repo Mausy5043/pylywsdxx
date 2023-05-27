@@ -80,12 +80,14 @@ class Lywsd02:  # pylint: disable=R0902
         self._data = SensorData(None, None, None, None)
         self._history_data = collections.OrderedDict()
         self._context_depth = 0
-        # the number of times a device must cause an error before countermeasures are taken
+
+        # define the number of times a device must cause an error before countermeasures are taken
         self.reusable = reusable
         self._tries = 1     # default
         self._set_tries()
 
     def _set_tries(self):
+        """Initialise a retry counter"""
         self._tries = 3 if self.reusable else 1
 
     def _get_history_data(self):
@@ -159,7 +161,7 @@ class Lywsd02:  # pylint: disable=R0902
                 # re-raise for now
                 if self._tries <= 0:
                     # raise for now; reset hardware and device tries-counter later
-                    raise PyLyTimeout(f"-- {her} --") from her
+                    # raise PyLyTimeout(f"-- {her} --") from her
                     ble_reset()
                     self._set_tries()
             except btle.BTLEConnectError as her:
@@ -174,7 +176,7 @@ class Lywsd02:  # pylint: disable=R0902
                 # re-raise for now
                 if self._tries <= 0:
                     # raise for now; reset hardware and device tries-counter later
-                    raise PyLyConnectError(f"-- {her} --") from her
+                    # raise PyLyConnectError(f"-- {her} --") from her
                     ble_reset()
                     self._set_tries()
             except Exception as her:
