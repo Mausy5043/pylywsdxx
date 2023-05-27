@@ -85,10 +85,17 @@ class Lywsd02:  # pylint: disable=R0902
         self.reusable = reusable
         self._tries = 1     # default
         self._set_tries()
+        # define the number of times a device may cause a countermeasure before we give up and raise an error
+        self._resets = 1
+        self._set_resets()
 
     def _set_tries(self):
         """Initialise a retry counter"""
         self._tries = 3 if self.reusable else 1
+
+    def _set_resets(self):
+        """Initialise a reset counter"""
+        self._resets = 3
 
     def _get_history_data(self):
         with self.connect():
@@ -160,10 +167,11 @@ class Lywsd02:  # pylint: disable=R0902
                     )
                 # re-raise for now
                 if self._tries <= 0:
-                    # raise for now; reset hardware and device tries-counter later
-                    # raise PyLyTimeout(f"-- {her} --") from her
+                    self._resets -= 1
                     ble_reset()
                     self._set_tries()
+                    if self._resets <= 0:
+                        raise PyLyTimeout(f"-- {her} --") from her
             except btle.BTLEConnectError as her:
                 # Catch connection errors here
                 self._tries -= 1
@@ -173,12 +181,12 @@ class Lywsd02:  # pylint: disable=R0902
                         RuntimeWarning,
                         stacklevel=2,
                     )
-                # re-raise for now
                 if self._tries <= 0:
-                    # raise for now; reset hardware and device tries-counter later
-                    # raise PyLyConnectError(f"-- {her} --") from her
+                    self._resets -= 1
                     ble_reset()
                     self._set_tries()
+                    if self._resets <= 0:
+                        raise PyLyConnectError(f"-- {her} --") from her
             except Exception as her:
                 # warnings.warn(
                 #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
