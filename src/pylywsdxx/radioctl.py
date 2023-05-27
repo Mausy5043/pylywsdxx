@@ -2,10 +2,13 @@
 
 import subprocess  # nosec B404
 import time
+import warnings
 
 
 def ble_reset(delay=5.0):
     """Reset the bluetooth hardware"""
+
+    warnings.warn(f"Resetting BT-radio.",RuntimeWarning)
 
     # Have you tried turning it off and on again?
     args = ["/usr/bin/bluetoothctl", "power", "off"]
