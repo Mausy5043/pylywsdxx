@@ -20,6 +20,7 @@ UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte           
 UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes               READ
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
+warnings.filterwarnings("always", category=RuntimeWarning)
 
 class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions"""
@@ -163,12 +164,12 @@ class Lywsd02:  # pylint: disable=R0902
                         RuntimeWarning,
                         stacklevel=2,
                     )
-                # re-raise for now
                 if self._tries <= 0:
                     self._resets -= 1
                     ble_reset()
                     self._set_tries()
                     if self._resets <= 0:
+                        # re-raise because apparently resetting the radio doesn't work
                         raise PyLyTimeout(f"-- {her} --") from her
             except btle.BTLEConnectError as her:
                 # Catch connection errors here
@@ -184,6 +185,7 @@ class Lywsd02:  # pylint: disable=R0902
                     ble_reset()
                     self._set_tries()
                     if self._resets <= 0:
+                        # re-raise because apparently resetting the radio doesn't work
                         raise PyLyConnectError(f"-- {her} --") from her
             except Exception as her:
                 raise PyLyException(f"-- {her} --") from her
@@ -193,12 +195,6 @@ class Lywsd02:  # pylint: disable=R0902
             yield self
         except Exception as her:
             # Non-anticipated exceptions must be raised to draw attention to them.
-            # warnings.warn(
-            #     f"(pylywsdxx.client) An exception of type {type(her).__name__} occured",
-            #     RuntimeWarning,
-            #     stacklevel=2,
-            # )
-            # re-raise for now
             raise PyLyException(f"-- {her} --") from her
         finally:
             self._context_depth -= 1

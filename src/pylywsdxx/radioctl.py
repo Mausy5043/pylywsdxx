@@ -4,6 +4,8 @@ import subprocess  # nosec B404
 import time
 import warnings
 
+warnings.filterwarnings("always", category=RuntimeWarning)
+
 
 def ble_reset(delay=5.0):
     """Reset the bluetooth hardware"""
