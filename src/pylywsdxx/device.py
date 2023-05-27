@@ -142,7 +142,7 @@ class Lywsd02:  # pylint: disable=R0902
 
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
-    # FIXME: why name of method can't be changed (?!)
+    # FIXME: why can't the name of this method be changed (?!)
     def handleNotification(self, handle, data):  # noqa
         func = self._handles.get(handle)
         if func:
@@ -188,11 +188,6 @@ class Lywsd02:  # pylint: disable=R0902
                     if self._resets <= 0:
                         raise PyLyConnectError(f"-- {her} --") from her
             except Exception as her:
-                # warnings.warn(
-                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                #     RuntimeWarning,
-                #     stacklevel=2,
-                # )
                 raise PyLyException(f"-- {her} --") from her
 
         self._context_depth += 1
