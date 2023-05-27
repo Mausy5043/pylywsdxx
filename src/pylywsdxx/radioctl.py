@@ -10,7 +10,7 @@ warnings.filterwarnings("always", category=RuntimeWarning)
 def ble_reset(delay=5.0):
     """Reset the bluetooth hardware"""
 
-    warnings.warn(f"Resetting BT-radio.", RuntimeWarning, stacklevel=2)
+    warnings.warn("Resetting BT-radio.", RuntimeWarning, stacklevel=2)
 
     # Have you tried turning it off and on again?
     args = ["/usr/bin/bluetoothctl", "power", "off"]
