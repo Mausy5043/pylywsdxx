@@ -116,7 +116,7 @@ class Lywsd02:  # pylint: disable=R0902
                 if self.debug:
                     print(f"|-- Timeout waiting for {self._mac}")
                 raise PyLyTimeout(
-                    f"No data from device for {self._notification_timeout} seconds"
+                    f"No data from device {self._mac} for {self._notification_timeout} seconds"
                 )
 
     def _process_history_data(self, data):
