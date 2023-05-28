@@ -168,7 +168,7 @@ class Lywsd02:  # pylint: disable=R0902
                     )
                 if self._tries <= 0:
                     self._resets -= 1
-                    ble_reset()
+                    ble_reset(debug=self.debug)
                     self._set_tries()
                     if self._resets <= 0:
                         # re-raise because apparently resetting the radio doesn't work
@@ -184,7 +184,7 @@ class Lywsd02:  # pylint: disable=R0902
                     )
                 if self._tries <= 0:
                     self._resets -= 1
-                    ble_reset()
+                    ble_reset(debug=self.debug)
                     self._set_tries()
                     if self._resets <= 0:
                         # re-raise because apparently resetting the radio doesn't work
