@@ -157,38 +157,57 @@ class Lywsd02:  # pylint: disable=R0902
                 print(f"|-> Connecting to {self._mac}")
             try:
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
-            except btle.BTLEConnectTimeout as her:
-                # Catch connection timeouts here
+            except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
+                message = ""
+                reraise = PyLyException(f"-- {her} --")
+                if isinstance(her, btle.BTLEConnectError):
+                    message = f"Device ({self._mac}) connection failed."
+                    reraise = PyLyConnectError(f"-- {her} --")
+                if isinstance(her, btle.BTLEConnectTimeout):
+                    message = f"Device ({self._mac}) timed out on connect."
+                    reraise = PyLyTimeout(f"-- {her} --")
                 self._tries -= 1
-                if self._tries > 0:
-                    warnings.warn(
-                        f"Device ({self._mac}) timed out on connect.",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
+                # if self._tries > 0:
+                warnings.warn(message, RuntimeWarning, stacklevel=2)
                 if self._tries <= 0:
                     self._resets -= 1
                     ble_reset(debug=self.debug)
                     self._set_tries()
                     if self._resets <= 0:
                         # re-raise because apparently resetting the radio doesn't work
-                        raise PyLyTimeout(f"-- {her} --") from her
-            except btle.BTLEConnectError as her:
-                # Catch connection errors here
-                self._tries -= 1
-                if self._tries > 0:
-                    warnings.warn(
-                        f"Device ({self._mac}) connection failed.",
-                        RuntimeWarning,
-                        stacklevel=2,
-                    )
-                if self._tries <= 0:
-                    self._resets -= 1
-                    ble_reset(debug=self.debug)
-                    self._set_tries()
-                    if self._resets <= 0:
-                        # re-raise because apparently resetting the radio doesn't work
-                        raise PyLyConnectError(f"-- {her} --") from her
+                        raise reraise from her
+            # except btle.BTLEConnectTimeout as her:
+            #     # Catch connection timeouts here
+            #     self._tries -= 1
+            #     if self._tries > 0:
+            #         warnings.warn(
+            #             f"Device ({self._mac}) timed out on connect.",
+            #             RuntimeWarning,
+            #             stacklevel=2,
+            #         )
+            #     if self._tries <= 0:
+            #         self._resets -= 1
+            #         ble_reset(debug=self.debug)
+            #         self._set_tries()
+            #         if self._resets <= 0:
+            #             # re-raise because apparently resetting the radio doesn't work
+            #             raise PyLyTimeout(f"-- {her} --") from her
+            # except btle.BTLEConnectError as her:
+            #     # Catch connection errors here
+            #     self._tries -= 1
+            #     if self._tries > 0:
+            #         warnings.warn(
+            #             f"Device ({self._mac}) connection failed.",
+            #             RuntimeWarning,
+            #             stacklevel=2,
+            #         )
+            #     if self._tries <= 0:
+            #         self._resets -= 1
+            #         ble_reset(debug=self.debug)
+            #         self._set_tries()
+            #         if self._resets <= 0:
+            #             # re-raise because apparently resetting the radio doesn't work
+            #             raise PyLyConnectError(f"-- {her} --") from her
             except Exception as her:
                 raise PyLyException(f"-- {her} --") from her
 
