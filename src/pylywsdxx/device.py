@@ -152,68 +152,38 @@ class Lywsd02:  # pylint: disable=R0902
     @contextlib.contextmanager
     def connect(self):
         """Handle device connecting and disconnecting"""
-        if self._context_depth == 0:
-            if self.debug:
-                print(f"|-> Connecting to {self._mac}")
-            try:
-                self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
-            except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
-                message = ""
-                reraise = PyLyException(f"-- {her} --")
-                if isinstance(her, btle.BTLEConnectError):
-                    message = f"Device ({self._mac}) connection failed."
-                    reraise = PyLyConnectError(f"-- {her} --")
-                if isinstance(her, btle.BTLEConnectTimeout):
-                    message = f"Device ({self._mac}) timed out on connect."
-                    reraise = PyLyTimeout(f"-- {her} --")
-                self._tries -= 1
-                # if self._tries > 0:
-                warnings.warn(message, RuntimeWarning, stacklevel=2)
-                if self._tries <= 0:
-                    self._resets -= 1
-                    ble_reset(debug=self.debug)
-                    self._set_tries()
-                    if self._resets <= 0:
-                        # re-raise because apparently resetting the radio doesn't work
-                        raise reraise from her
-            # except btle.BTLEConnectTimeout as her:
-            #     # Catch connection timeouts here
-            #     self._tries -= 1
-            #     if self._tries > 0:
-            #         warnings.warn(
-            #             f"Device ({self._mac}) timed out on connect.",
-            #             RuntimeWarning,
-            #             stacklevel=2,
-            #         )
-            #     if self._tries <= 0:
-            #         self._resets -= 1
-            #         ble_reset(debug=self.debug)
-            #         self._set_tries()
-            #         if self._resets <= 0:
-            #             # re-raise because apparently resetting the radio doesn't work
-            #             raise PyLyTimeout(f"-- {her} --") from her
-            # except btle.BTLEConnectError as her:
-            #     # Catch connection errors here
-            #     self._tries -= 1
-            #     if self._tries > 0:
-            #         warnings.warn(
-            #             f"Device ({self._mac}) connection failed.",
-            #             RuntimeWarning,
-            #             stacklevel=2,
-            #         )
-            #     if self._tries <= 0:
-            #         self._resets -= 1
-            #         ble_reset(debug=self.debug)
-            #         self._set_tries()
-            #         if self._resets <= 0:
-            #             # re-raise because apparently resetting the radio doesn't work
-            #             raise PyLyConnectError(f"-- {her} --") from her
-            except Exception as her:
-                raise PyLyException(f"-- {her} --") from her
-
-        self._context_depth += 1
         try:
+            if self._context_depth == 0:
+                if self.debug:
+                    print(f"|-> Connecting to {self._mac}")
+                # try:
+                self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
+
+            self._context_depth += 1
+            # try:
             yield self
+        except (btle.BTLEConnectTimeout, btle.BTLEConnectError, btle.BTLEInternalError) as her:
+            message = ""
+            reraise = PyLyException(f"-- {her} --")
+            if isinstance(her, btle.BTLEConnectError):
+                message = f"Device ({self._mac}) connection failed."
+                reraise = PyLyConnectError(f"-- {her} --")
+            if isinstance(her, btle.BTLEConnectTimeout):
+                message = f"Device ({self._mac}) timed out on connect."
+                reraise = PyLyTimeout(f"-- {her} --")
+            if isinstance(her, btle.BTLEInternalError):
+                message = f"Device ({self._mac}) ."
+                reraise = PyLyTimeout(f"-- {her} --")
+            self._tries -= 1
+            # if self._tries > 0:
+            warnings.warn(message, RuntimeWarning, stacklevel=2)
+            if self._tries <= 0:
+                self._resets -= 1
+                ble_reset(debug=self.debug)
+                self._set_tries()
+                if self._resets <= 0:
+                    # re-raise because apparently resetting the radio doesn't work
+                    raise reraise from her
         except Exception as her:
             # Non-anticipated exceptions must be raised to draw attention to them.
             raise PyLyException(f"-- {her} --") from her
