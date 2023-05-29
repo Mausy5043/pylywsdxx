@@ -185,7 +185,9 @@ class Lywsd02:  # pylint: disable=R0902
                     # re-raise because apparently resetting the radio doesn't work
                     raise reraise from her
         except Exception as her:
-            # Non-anticipated exceptions must be raised to draw attention to them.
+            # Non-anticipated exceptions must be raised to draw attention to them
+            # We'll reset the radio because it has had results in the past
+            ble_reset(debug=self.debug)
             raise PyLyException(f"-- {her} --") from her
         finally:
             self._context_depth -= 1
