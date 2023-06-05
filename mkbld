@@ -72,7 +72,7 @@ case $CMD in
         ;;
     *)
         echo "Syntax:"
-        echo "build [-b|--build] | [-d|--dist] | [-t|--test] | [--discard]"
+        echo "mkbld [-b|--build] | [-d|--dist] | [-t|--test] | [--discard]"
         echo "Only the first option past is executed!"
         echo
         exit 1
