@@ -150,7 +150,7 @@ class Lywsd02:  # pylint: disable=R0902
             func(data)
 
     @contextlib.contextmanager
-    def connect(self):
+    def connect(self):  # pylint: disable=R0912
         """Handle device connecting and disconnecting"""
         if self._context_depth == 0:
             if self.debug:
