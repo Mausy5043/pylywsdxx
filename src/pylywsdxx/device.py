@@ -172,8 +172,8 @@ class Lywsd02:  # pylint: disable=R0902
                 message = f"Device ({self._mac}) timed out on connect."
                 reraise = PyLyTimeout(f"-- {her} --")
             if isinstance(her, btle.BTLEInternalError):
-                message = f"Device ({self._mac}) ."
-                reraise = PyLyTimeout(f"-- {her} --")
+                message = f"BTLE internal error while talking with device ({self._mac})."
+                reraise = PyLyException(f"-- {her} --")
             self._tries -= 1
             # fmt: off
             warnings.warn(f"{message} ({self._tries}/{self._resets})",
