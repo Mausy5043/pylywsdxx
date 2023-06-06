@@ -72,6 +72,9 @@ class Lywsd02:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
+    _MAX_TRIES = 6
+    _MAX_RESETS = 3
+
     def __init__(self, mac, notification_timeout=11.0, reusable=False, debug=False):
         self.debug = debug
         self.reusable = reusable
@@ -92,11 +95,15 @@ class Lywsd02:  # pylint: disable=R0902
 
     def _set_tries(self):
         """Initialise a retry counter"""
-        self._tries = 3 if self.reusable else 1
+        self._tries = self._MAX_TRIES if self.reusable else 1
 
     def _set_resets(self):
         """Initialise a reset counter"""
-        self._resets = 3
+        self._resets = self._MAX_RESETS
+
+    def _tr_msg(self):
+        return f"T{self._tries - self._MAX_TRIES}/{self._MAX_TRIES}:" \
+               f"R{self._resets - self._MAX_RESETS}/{self._MAX_RESETS}"
 
     def _get_history_data(self):
         with self.connect():
