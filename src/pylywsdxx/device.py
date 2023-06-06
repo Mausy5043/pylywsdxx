@@ -102,8 +102,10 @@ class Lywsd02:  # pylint: disable=R0902
         self._resets = self._MAX_RESETS
 
     def _tr_msg(self):
-        return f"T{self._tries - self._MAX_TRIES}/{self._MAX_TRIES}:" \
-               f"R{self._resets - self._MAX_RESETS}/{self._MAX_RESETS}"
+        return (
+            f"T{self._tries - self._MAX_TRIES}/{self._MAX_TRIES}:"
+            f"R{self._resets - self._MAX_RESETS}/{self._MAX_RESETS}"
+        )
 
     def _get_history_data(self):
         with self.connect():
@@ -348,9 +350,6 @@ class Lywsd03(Lywsd02):
         self._latest_record = None
 
     def _get_history_data(self):
-        # FIXME: Get the time the device was first run
-        # self.start_time
-
         # Work out the expected last record we'll be sent from the device.
         # The current hour doesn't appear until the end of the hour, and the time is recorded as
         # the end of hour time
