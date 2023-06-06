@@ -201,7 +201,7 @@ class Lywsd02:  # pylint: disable=R0902
                 reraise = PyLyException(f"-- {her} --")
             self._tries -= 1
             # fmt: off
-            warnings.warn(f"{message} ({self._tries}/{self._resets})", RuntimeWarning, stacklevel=2)
+            warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
             # fmt: on
             if self._tries <= 0:
                 self._resets -= 1
