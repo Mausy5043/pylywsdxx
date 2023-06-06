@@ -196,7 +196,7 @@ class Lywsd02:  # pylint: disable=R0902
             # fmt: off
             warnings.warn(f"{message} ({self._tries}/{self._resets})", RuntimeWarning, stacklevel=2)
             # fmt: on
-            if self._tries <= 1:  # awaiting kimnaty update
+            if self._tries <= 0:
                 self._resets -= 1
                 ble_reset(debug=self.debug)
                 self._set_tries()
