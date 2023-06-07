@@ -103,8 +103,8 @@ class Lywsd02:  # pylint: disable=R0902
 
     def _tr_msg(self):
         return (
-            f"T{self._tries - self._MAX_TRIES}/{self._MAX_TRIES}:"
-            f"R{self._resets - self._MAX_RESETS}/{self._MAX_RESETS}"
+            f"T{self._MAX_TRIES - self._tries}/{self._MAX_TRIES}:"
+            f"R{self._MAX_RESETS - self._resets}/{self._MAX_RESETS}"
         )
 
     def _get_history_data(self):
