@@ -7,7 +7,7 @@ import warnings
 warnings.filterwarnings("always", category=RuntimeWarning)
 
 
-def ble_reset(delay=5.0, debug=False):
+def ble_reset(delay=20.0, debug=False):
     """Reset the bluetooth hardware"""
     warnings.warn("Resetting BT-radio.", RuntimeWarning, stacklevel=2)
 
