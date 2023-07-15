@@ -10,7 +10,7 @@ args = parser.parse_args()
 
 for mac in args.mac:
     try:
-        client = pyly.Lywsd03client(mac)
+        client = pyly.Lywsd03(mac)
         print(f"Fetching data from {mac}")
         data = client.data
         print(f"Temperature: {data.temperature}°C")

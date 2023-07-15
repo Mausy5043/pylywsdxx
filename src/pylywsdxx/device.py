@@ -2,12 +2,14 @@
 
 import collections
 import contextlib
-import warnings
 import struct
 import time
+import warnings
 from datetime import datetime, timedelta
 
 from bluepy3 import btle  # noqa
+
+from .radioctl import ble_reset
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
@@ -17,6 +19,8 @@ UUID_DATA = "EBE0CCC1-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _        3 bytes          
 UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte                READ
 UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes               READ
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
+
+warnings.filterwarnings("always", category=RuntimeWarning)
 
 
 class PyLyException(Exception):
@@ -39,6 +43,7 @@ class PyLyConnectError(PyLyException):
     def __init__(self, message):
         PyLyException.__init__(self, message)
 
+
 class PyLyValueError(PyLyException):
     def __init__(self, message):
         PyLyException.__init__(self, message)
@@ -55,7 +60,7 @@ class SensorData(
     __slots__ = ()
 
 
-class Lywsd02client:  # pylint: disable=R0902
+class Lywsd02:  # pylint: disable=R0902
     """Class to communicate with LYWSD02 devices."""
 
     UNITS = {
@@ -67,8 +72,12 @@ class Lywsd02client:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    def __init__(self, mac, notification_timeout=11.0, debug=False):
+    _MAX_TRIES = 6
+    _MAX_RESETS = 3
+
+    def __init__(self, mac, notification_timeout=11.0, reusable=False, debug=False):
         self.debug = debug
+        self.reusable = reusable
         btle.Debugging = self.debug
         self._mac = mac
         self._peripheral = btle.Peripheral()
@@ -78,6 +87,25 @@ class Lywsd02client:  # pylint: disable=R0902
         self._data = SensorData(None, None, None, None)
         self._history_data = collections.OrderedDict()
         self._context_depth = 0
+
+        # define the number of times a device must cause an error before countermeasures are taken
+        self._set_tries()
+        # define the number of times a device may cause a countermeasure before we give up and raise an error
+        self._set_resets()
+
+    def _set_tries(self):
+        """Initialise a retry counter"""
+        self._tries = self._MAX_TRIES if self.reusable else 1
+
+    def _set_resets(self):
+        """Initialise a reset counter"""
+        self._resets = self._MAX_RESETS
+
+    def _tr_msg(self):
+        return (
+            f"T{self._MAX_TRIES - self._tries}/{self._MAX_TRIES}:"
+            f"R{self._MAX_RESETS - self._resets}/{self._MAX_RESETS}"
+        )
 
     def _get_history_data(self):
         with self.connect():
@@ -94,8 +122,10 @@ class Lywsd02client:  # pylint: disable=R0902
             self._subscribe(UUID_DATA, self._process_sensor_data)
 
             if not self._peripheral.waitForNotifications(self._notification_timeout):
-                raise TimeoutError(
-                    f"(pylywsdxx.client.py) No data from device for {self._notification_timeout} seconds"
+                if self.debug:
+                    print(f"|-- Timeout waiting for {self._mac}")
+                raise PyLyTimeout(
+                    f"No data from device {self._mac} for {self._notification_timeout} seconds"
                 )
 
     def _process_history_data(self, data):
@@ -122,50 +152,71 @@ class Lywsd02client:  # pylint: disable=R0902
 
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
-    def handleNotification(self, handle, data):  # noqa - FIXME: why name of method can't be changed (?!)
+    # FIXME: why can't the name of this method be changed (?!)
+    def handleNotification(self, handle, data):  # noqa
         func = self._handles.get(handle)
         if func:
             func(data)
 
     @contextlib.contextmanager
-    def connect(self):
+    def connect(self):  # pylint: disable=R0912
         """Handle device connecting and disconnecting"""
         if self._context_depth == 0:
             if self.debug:
                 print(f"|-> Connecting to {self._mac}")
             try:
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
-            except btle.BTLEConnectTimeout as her:
-                # Catch connection errors here
-                # warnings.warn(
-                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                #     RuntimeWarning,
-                #     stacklevel=2,
-                # )
-                # re-raise for now
-                raise PyLyTimeout(f"-- {her} --") from her
-            except btle.BTLEConnectError as her:
-                # warnings.warn(
-                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                #     RuntimeWarning,
-                #     stacklevel=2,
-                # )
-                # re-raise for now
-                raise PyLyConnectError(f"-- {her} --") from her
+            except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
+                message = ""
+                reraise = PyLyException(f"-- {her} --")
+                if isinstance(her, btle.BTLEConnectError):
+                    message = f"Device ({self._mac}) connection failed."
+                    reraise = PyLyConnectError(f"-- {her} --")
+                if isinstance(her, btle.BTLEConnectTimeout):
+                    message = f"Device ({self._mac}) timed out on connect."
+                    reraise = PyLyTimeout(f"-- {her} --")
+                self._tries -= 1
+                # fmt: off
+                warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+                # fmt: on
+                if self._tries <= 0:
+                    self._resets -= 1
+                    ble_reset(debug=self.debug)
+                    self._set_tries()
+                    if self._resets <= 0:
+                        # re-raise because apparently resetting the radio doesn't work
+                        raise reraise from her
             except Exception as her:
-                # warnings.warn(
-                #     f"(pylywsdxx.connect) An exception of type {type(her).__name__} occured ({self._mac}).",
-                #     RuntimeWarning,
-                #     stacklevel=2,
-                # )
+                # Non-anticipated exceptions must be raised to draw attention to them
+                # We'll reset the radio because it has had results in the past
+                ble_reset(debug=self.debug)
                 raise PyLyException(f"-- {her} --") from her
 
         self._context_depth += 1
         try:
             yield self
+        except btle.BTLEInternalError as her:
+            message = ""
+            reraise = PyLyException(f"-- {her} --")
+            if isinstance(her, btle.BTLEInternalError):
+                message = f"BTLE internal error while talking with device ({self._mac})."
+                reraise = PyLyException(f"-- {her} --")
+            self._tries -= 1
+            # fmt: off
+            warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+            # fmt: on
+            if self._tries <= 0:
+                self._resets -= 1
+                ble_reset(debug=self.debug)
+                self._set_tries()
+                if self._resets <= 0:
+                    # re-raise because apparently resetting the radio doesn't work
+                    raise reraise from her
         except Exception as her:
-            # print(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured")
-            warnings.warn(f"(pylywsdxx.client) An exception of type {type(her).__name__} occured", RuntimeWarning, stacklevel=2)
+            # Non-anticipated exceptions must be raised to draw attention to them
+            # We'll reset the radio because it has had results in the past
+            ble_reset(debug=self.debug)
+            raise PyLyException(f"-- {her} --") from her
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
@@ -268,7 +319,7 @@ class Lywsd02client:  # pylint: disable=R0902
             ch.write(self.UNITS_CODES[value.upper()], withResponse=True)
 
 
-class Lywsd03client(Lywsd02client):
+class Lywsd03(Lywsd02):
     """Class to communicate with LYWSD03MMC devices."""
 
     # Temperature units specific to LYWSD03MMC devices
@@ -292,14 +343,13 @@ class Lywsd03client(Lywsd02client):
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=12.3, debug=False):
-        super().__init__(mac=mac, notification_timeout=notification_timeout, debug=debug)
+    def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False):
+        super().__init__(
+            mac=mac, notification_timeout=notification_timeout, reusable=reusable, debug=debug
+        )
         self._latest_record = None
 
     def _get_history_data(self):
-        # FIXME: Get the time the device was first run
-        # self.start_time
-
         # Work out the expected last record we'll be sent from the device.
         # The current hour doesn't appear until the end of the hour, and the time is recorded as
         # the end of hour time
@@ -342,7 +392,9 @@ class Lywsd03client(Lywsd02client):
         temperature /= 100
         voltage /= 1000
         # battery (float): Estimate percentage of the battery charge remaining
-        battery = round(((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1)
+        battery = round(
+            ((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1
+        )
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
         )
