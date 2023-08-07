@@ -20,13 +20,13 @@ UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte           
 UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes               READ
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
-warnings.filterwarnings("always", category=RuntimeWarning)
+warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 
 class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions"""
 
-    def __init__(self, message):
+    def __init__(self, message: str):
         self.message = message
 
     def __str__(self):
@@ -35,17 +35,17 @@ class PyLyException(Exception):
 
 
 class PyLyTimeout(PyLyException):
-    def __init__(self, message):
+    def __init__(self, message: str):
         PyLyException.__init__(self, message)
 
 
 class PyLyConnectError(PyLyException):
-    def __init__(self, message):
+    def __init__(self, message: str):
         PyLyException.__init__(self, message)
 
 
 class PyLyValueError(PyLyException):
-    def __init__(self, message):
+    def __init__(self, message: str):
         PyLyException.__init__(self, message)
 
 
@@ -75,7 +75,23 @@ class Lywsd02:  # pylint: disable=R0902
     _MAX_TRIES = 6
     _MAX_RESETS = 3
 
-    def __init__(self, mac, notification_timeout=11.0, reusable=False, debug=False):
+    def __init__(
+        self,
+        mac: str,
+        notification_timeout: float = 11.0,
+        reusable: bool = False,
+        debug: bool = False,
+    ):
+        """
+        Initialise a LYWSD02 device
+
+        Args:
+            mac: MAC-adress of the device.
+            notification_timeout: number of seconds to wait for a connection to be made.
+            reusable: whether an object is reusable or not. Device-objects that are reusable allow for more flexible
+                      error-handling when failures occur in the communication with a device.
+            debug: whether to provide debugging info output.
+        """
         self.debug = debug
         self.reusable = reusable
         btle.Debugging = self.debug
@@ -310,7 +326,7 @@ class Lywsd02:  # pylint: disable=R0902
         return self.UNITS[value]
 
     @units.setter
-    def units(self, value):
+    def units(self, value: str):
         if value.upper() not in self.UNITS_CODES:
             raise PyLyValueError(f"Units value must be one of {self.UNITS_CODES.keys()}")
 

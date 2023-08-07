@@ -4,12 +4,17 @@ import subprocess  # nosec B404
 import time
 import warnings
 
-warnings.filterwarnings("always", category=RuntimeWarning)
+warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 
-def ble_reset(delay=20.0, debug=False):
-    """Reset the bluetooth hardware"""
-    warnings.warn("Resetting BT-radio.", RuntimeWarning, stacklevel=2)
+def ble_reset(delay: float = 20.0, debug: bool = False):
+    """Reset the bluetooth hardware
+    Args:
+        delay: time [s] to wait between switching off and back on again.
+        debug: whether to provide debugging information.
+
+    """
+    warnings.warn(message="Resetting BT-radio.", category=RuntimeWarning, stacklevel=2)
 
     # Have you tried turning it off and on again?
     args = ["/usr/bin/bluetoothctl", "power", "off"]
