@@ -1,11 +1,9 @@
-# pylywsdxx
-
-
 [![PyPI version](https://img.shields.io/pypi/v/pylywsdxx.svg?logo=pypi&logoColor=FFE873)](https://pypi.org/project/pylywsdxx)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/pylywsdxx.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/pylywsdxx)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pylywsdxx.svg)](https://pypistats.org/packages/pylywsdxx)
 [![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
 
+# pylywsdxx
 
 This is a Python3 library to allow interrogation of Xiaomi Mijia LYWSD* sensors via Bluetooth Low Energy (BLE).
 
