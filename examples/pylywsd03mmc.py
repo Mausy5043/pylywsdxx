@@ -4,6 +4,9 @@ import argparse
 
 import pylywsdxx as pyly  # noqa
 
+# In these examples we don't care about pylint's W0718
+# pylint: disable=broad-exception-caught
+
 parser = argparse.ArgumentParser()
 parser.add_argument("mac", help="MAC address of LYWSD02 device", nargs="+")
 args = parser.parse_args()

@@ -5,6 +5,9 @@ import csv
 
 import pylywsdxx as pyly  # noqa
 
+# In these examples we don't care about pylint's W0718
+# pylint: disable=broad-exception-caught
+
 parser = argparse.ArgumentParser()
 parser.add_argument("mac", help="MAC address of LYWSD03MMC device")
 parser.add_argument("--output", help="File to output", default="output.csv")
