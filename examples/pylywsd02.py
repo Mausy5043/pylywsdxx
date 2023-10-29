@@ -5,6 +5,9 @@ from datetime import datetime
 
 import pylywsdxx as pyly  # noqa
 
+# In these examples we don't care about pylint's W0718
+# pylint: disable=broad-exception-caught
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "action",

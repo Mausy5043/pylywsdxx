@@ -8,7 +8,8 @@ warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 
 def ble_reset(delay: float = 20.0, debug: bool = False):
-    """Reset the bluetooth hardware
+    """Reset the bluetooth hardware.
+
     Args:
         delay: time [s] to wait between switching off and back on again.
         debug: whether to provide debugging information.
