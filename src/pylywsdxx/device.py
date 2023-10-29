@@ -24,7 +24,7 @@ warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 
 class PyLyException(Exception):
-    """Base class for all pylywsdxx exceptions"""
+    """Base class for all pylywsdxx exceptions."""
 
     def __init__(self, message: str):
         self.message = message
@@ -35,16 +35,22 @@ class PyLyException(Exception):
 
 
 class PyLyTimeout(PyLyException):
+    """Class for timeout errors from upstream."""
+
     def __init__(self, message: str):
         PyLyException.__init__(self, message)
 
 
 class PyLyConnectError(PyLyException):
+    """Class for connection errors from upstream."""
+
     def __init__(self, message: str):
         PyLyException.__init__(self, message)
 
 
 class PyLyValueError(PyLyException):
+    """Class for value errors."""
+
     def __init__(self, message: str):
         PyLyException.__init__(self, message)
 
