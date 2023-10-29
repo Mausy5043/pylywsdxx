@@ -94,8 +94,9 @@ class Lywsd02:  # pylint: disable=R0902
         Args:
             mac: MAC-adress of the device.
             notification_timeout: number of seconds to wait for a connection to be made.
-            reusable: whether an object is reusable or not. Device-objects that are reusable allow for more flexible
-                      error-handling when failures occur in the communication with a device.
+            reusable: whether an object is reusable or not. Device-objects that are reusable
+                      allow for more flexible error-handling when failures occur in the
+                      communication with a device.
             debug: whether to provide debugging info output.
         """
         self.debug = debug
@@ -112,7 +113,8 @@ class Lywsd02:  # pylint: disable=R0902
 
         # define the number of times a device must cause an error before countermeasures are taken
         self._set_tries()
-        # define the number of times a device may cause a countermeasure before we give up and raise an error
+        # define the number of times a device may cause a countermeasure before we give up
+        # and raise an error
         self._set_resets()
 
     def _set_tries(self):
@@ -395,7 +397,8 @@ class Lywsd03(Lywsd02):
     def _process_history_data(self, data):
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
-        # Work out the time of this record by adding the record time to time the device was started
+        # Work out the time of this record by adding the record time to time the
+        # device was started
         ts = self.start_time + timedelta(seconds=ts)
         min_temp /= 10
         max_temp /= 10
@@ -428,8 +431,8 @@ class Lywsd03(Lywsd02):
 
     @property
     def battery(self):
-        """
-        Battery data comes along with the temperature and humidity data, so just get it from there.
+        """Battery data comes along with the temperature and humidity data, so
+           just get it from there.
 
         Returns:
              guestimate of battery percentage
