@@ -6,6 +6,7 @@ import warnings
 
 warnings.filterwarnings(action="always", category=RuntimeWarning)
 
+
 # fmt: off
 def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
     """Reset the bluetooth hardware.
