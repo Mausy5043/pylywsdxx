@@ -215,7 +215,7 @@ class Lywsd02:  # pylint: disable=R0902
                 # Non-anticipated exceptions must be raised to draw attention to them
                 # We'll reset the radio because it has had results in the past
                 ble_reset(debug=self.debug)
-                raise PyLyException(f"-- {type(her)} {her} --") from her
+                raise PyLyException(f"-- {her} --") from her
 
         self._context_depth += 1
         try:
