@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 name = "pylywsdxx"
 description = "A Python3 class to interrogate Xiaomi Mijia LYWSD* sensors."
 #version = "1.10.4"  # latest/current distribution version
-version = "1.11.1"  # latest test version
+version = "1.11.3"  # latest test version
 dependencies = [
     "bluepy3",
 ]
