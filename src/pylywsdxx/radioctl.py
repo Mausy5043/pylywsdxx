@@ -7,7 +7,7 @@ import warnings
 warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 
-def ble_reset(delay: float = 20.0, debug: bool = False):
+def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
     """Reset the bluetooth hardware.
 
     Args:
@@ -18,14 +18,18 @@ def ble_reset(delay: float = 20.0, debug: bool = False):
     warnings.warn(message="Resetting BT-radio.", category=RuntimeWarning, stacklevel=2)
 
     # Have you tried turning it off and on again?
-    args = ["/usr/bin/bluetoothctl", "power", "off"]
-    _exit_code_on = subprocess.check_output(args, shell=False)  # nosec B603
+    args: list[str] = ["/usr/bin/bluetoothctl", "power", "off"]
+    _exit_code_on: str = subprocess.check_output(args, shell=False).decode(  # nosec B603
+        encoding="utf-8"
+    )
     if debug:
         print(f"Radio off ({_exit_code_on})")
 
     time.sleep(delay)
     args = ["/usr/bin/bluetoothctl", "power", "on"]
-    _exit_code_off = subprocess.check_output(args, shell=False)  # nosec B603
+    _exit_code_off: str = subprocess.check_output(args, shell=False).decode(  # nosec B603
+        encoding="utf-8"
+    )
     if debug:
         print(f"Radio on ({_exit_code_off})")
 

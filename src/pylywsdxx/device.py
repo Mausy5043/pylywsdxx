@@ -99,17 +99,18 @@ class Lywsd02:  # pylint: disable=R0902
                       communication with a device.
             debug: whether to provide debugging info output.
         """
-        self.debug = debug
-        self.reusable = reusable
+        self.debug: bool = debug
+        self.reusable: bool = reusable
         btle.Debugging = self.debug
-        self._mac = mac
+        self._mac: str = mac
         self._peripheral = btle.Peripheral()
-        self._notification_timeout = notification_timeout
-        self._handles = {}
+        self._notification_timeout: float = notification_timeout
+        self._handles: dict = {}
+        # self._tz_offset: int = self.tz_offset  # does not work
         self._tz_offset = None
         self._data = SensorData(None, None, None, None)
-        self._history_data = collections.OrderedDict()
-        self._context_depth = 0
+        self._history_data: collections.OrderedDict = collections.OrderedDict()
+        self._context_depth: int = 0
 
         # define the number of times a device must cause an error before countermeasures are taken
         self._set_tries()
@@ -117,21 +118,21 @@ class Lywsd02:  # pylint: disable=R0902
         # and raise an error
         self._set_resets()
 
-    def _set_tries(self):
+    def _set_tries(self) -> None:
         """Initialise a retry counter"""
         self._tries = self._MAX_TRIES if self.reusable else 1
 
-    def _set_resets(self):
+    def _set_resets(self) -> None:
         """Initialise a reset counter"""
         self._resets = self._MAX_RESETS
 
-    def _tr_msg(self):
+    def _tr_msg(self) -> str:
         return (
             f"T{self._MAX_TRIES - self._tries}/{self._MAX_TRIES}:"
             f"R{self._MAX_RESETS - self._resets}/{self._MAX_RESETS}"
         )
 
-    def _get_history_data(self):
+    def _get_history_data(self) -> None:
         with self.connect():
             self._subscribe(UUID_HISTORY, self._process_history_data)
 
@@ -141,7 +142,7 @@ class Lywsd02:  # pylint: disable=R0902
                         print(f"|-- Timeout waiting for {self._mac}")
                     break
 
-    def _get_sensor_data(self):
+    def _get_sensor_data(self) -> None:
         with self.connect():
             self._subscribe(UUID_DATA, self._process_sensor_data)
 
@@ -214,7 +215,7 @@ class Lywsd02:  # pylint: disable=R0902
                 # Non-anticipated exceptions must be raised to draw attention to them
                 # We'll reset the radio because it has had results in the past
                 ble_reset(debug=self.debug)
-                raise PyLyException(f"-- {her} --") from her
+                raise PyLyException(f"-- {type(her)} {her} --") from her
 
         self._context_depth += 1
         try:
@@ -266,7 +267,7 @@ class Lywsd02:  # pylint: disable=R0902
         return self._history_data
 
     @property
-    def humidity(self):
+    def humidity(self) -> float:
         return self.data.humidity
 
     @property
@@ -278,7 +279,7 @@ class Lywsd02:  # pylint: disable=R0902
         return total_records, current_records
 
     @property
-    def temperature(self):
+    def temperature(self) -> float:
         return self.data.temperature
 
     @property
@@ -290,13 +291,13 @@ class Lywsd02:  # pylint: disable=R0902
         return _idx
 
     @history_index.setter
-    def history_index(self, value):
+    def history_index(self, value) -> None:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
             ch.write(struct.pack("I", value), withResponse=True)
 
     @property
-    def time(self):
+    def time(self) -> tuple[datetime, int]:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_TIME)[0]
             value = ch.read()
@@ -307,34 +308,36 @@ class Lywsd02:  # pylint: disable=R0902
             tz_offset = 0
         return datetime.fromtimestamp(ts), tz_offset
 
+    # FIXME: Incompatible types in assignment (setter has type "datetime",
+    #        property has type "tuple[datetime, int]")  [assignment] (mypy)
     @time.setter
-    def time(self, dt: datetime):
+    def time(self, dt: datetime) -> None:
         data = struct.pack("Ib", int(dt.timestamp()), self.tz_offset)
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_TIME)[0]
             ch.write(data, withResponse=True)
 
     @property
-    def tz_offset(self):
+    def tz_offset(self) -> int:
         if self._tz_offset is not None:
             return self._tz_offset
         if time.daylight:
             return -time.altzone // 3600
-        return -time.timezone // 3600
+        return -time.timezone // 3600  # divide and round down to nearest int
 
     @tz_offset.setter
-    def tz_offset(self, tz_offset: int):
+    def tz_offset(self, tz_offset: int) -> None:
         self._tz_offset = tz_offset
 
     @property
-    def units(self):
+    def units(self) -> str:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_UNITS)[0]
             value = ch.read()
         return self.UNITS[value]
 
     @units.setter
-    def units(self, value: str):
+    def units(self, value: str) -> None:
         if value.upper() not in self.UNITS_CODES:
             raise PyLyValueError(f"Units value must be one of {self.UNITS_CODES.keys()}")
 
@@ -478,11 +481,11 @@ class Lywsd03(Lywsd02):
         return
 
     @property
-    def tz_offset(self):
+    def tz_offset(self) -> int:
         return super().tz_offset
 
     @tz_offset.setter
-    def tz_offset(self, tz_offset: int):  # pylint: disable=W0613
+    def tz_offset(self, tz_offset: int) -> None:  # pylint: disable=W0613
         """Disable setting the time and timezone.
         LYWSD03MMCs don't have visible clocks.
 
