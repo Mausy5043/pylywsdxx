@@ -308,8 +308,6 @@ class Lywsd02:  # pylint: disable=R0902
             tz_offset = 0
         return datetime.fromtimestamp(ts), tz_offset
 
-    # FIXME: Incompatible types in assignment (setter has type "datetime",
-    #        property has type "tuple[datetime, int]")  [assignment] (mypy)
     @time.setter
     def time(self, dt: datetime) -> None:
         data = struct.pack("Ib", int(dt.timestamp()), self.tz_offset)
@@ -327,7 +325,7 @@ class Lywsd02:  # pylint: disable=R0902
 
     @tz_offset.setter
     def tz_offset(self, tz_offset: int) -> None:
-        self._tz_offset = tz_offset
+        self._tz_offset = tz_offset  # type: ignore[assignment]
 
     @property
     def units(self) -> str:
