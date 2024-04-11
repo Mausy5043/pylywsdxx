@@ -7,7 +7,7 @@ import time
 import warnings
 from datetime import datetime, timedelta
 
-from bluepy3 import btle
+from bluepy3 import btle  # noqa
 
 # from .device import Lywsd02
 from .device import Lywsd03
@@ -26,5 +26,5 @@ class PyLyManager:
     * mitigate device errors and take countermeasures centrally
     """
 
-    def init(self) -> None:
-        pass
+    def init(self, debug: bool = False,) -> None:
+        self.debug = debug
