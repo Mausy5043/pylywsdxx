@@ -6,6 +6,7 @@ from .device import PyLyConnectError
 from .device import PyLyException
 from .device import PyLyTimeout
 from .device import PyLyValueError
+from .manager import PyLyManager
 from .radioctl import ble_reset
 
 __all__ = (
@@ -15,5 +16,6 @@ __all__ = (
     "PyLyTimeout",
     "PyLyConnectError",
     "PyLyValueError",
+    "PyLyManager",
     "ble_reset",
 )
