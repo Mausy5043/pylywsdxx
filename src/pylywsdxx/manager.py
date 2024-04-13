@@ -90,7 +90,7 @@ class PyLyManager:
 
     def update_all(self) -> None:
         """Update the state of all devices known to the manager."""
-        for device_to_update in self.devices.keys():
+        for device_to_update in self.devices:
             self.update(name=device_to_update)
 
 
