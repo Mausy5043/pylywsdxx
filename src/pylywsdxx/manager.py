@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 
-import collections
-import contextlib
 import datetime as dt
-import struct
 import time
-import warnings
 from threading import Timer
 
 from typing import Any
 
 from .device import Lywsd02
 from .device import Lywsd03
-from .device import PyLyConnectError
-from .device import PyLyException
-from .device import PyLyTimeout
-from .device import PyLyValueError
-from .radioctl import ble_reset
+
+# from .device import PyLyConnectError
+# from .device import PyLyException
+# from .device import PyLyTimeout
+# from .device import PyLyValueError
+#  from .radioctl import ble_reset
 
 
 class PyLyManager:
