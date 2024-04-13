@@ -10,3 +10,4 @@ dependencies:
   # Not on conda channels:
   - pip:
     - pylint
+    - bluepy3

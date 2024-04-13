@@ -356,9 +356,9 @@ class Lywsd03(Lywsd02):
     #  CR2025: https://www.farnell.com/datasheets/1496883.pdf
     #  CR2032: https://www.farnell.com/datasheets/1496885.pdf
     # Lowest voltage for these batteries is 2.0 V but the BT radio
-    # on most devices will stop working when below 2.3 V (YMMV).
+    # on most devices will stop working somewhere below 2.3 V (YMMV).
     BATTERY_FULL = 3.4
-    BATTERY_LOW = 2.1
+    BATTERY_LOW = 2.21
 
     # Locally cache the start time of the device.
     # This value won't change, and caching improves the performance getting the history data
@@ -413,6 +413,9 @@ class Lywsd03(Lywsd02):
 
         Args:
             data (struct): struct containing sensor data
+
+        Returns:
+            None
         """
         temperature, humidity, voltage = struct.unpack_from("<hBh", data)
         temperature /= 100
