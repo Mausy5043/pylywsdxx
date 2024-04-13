@@ -26,7 +26,7 @@ class PyLyManager:
 
     def __init__(self, debug: bool = False) -> None:
         self.mgr_debug: bool = debug
-        self.devices = {}
+        self.devices: dict[str, dict] = {}
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
 
@@ -42,7 +42,7 @@ class PyLyManager:
             Nothing.
         """
         if version == 3:
-            _object = Lywsd03(
+            _object: Any = Lywsd03(
                 mac=mac,
                 notification_timeout=self.mgr_notification_timeout,
                 reusable=self.mgr_reusable,
