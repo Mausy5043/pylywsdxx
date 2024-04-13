@@ -109,7 +109,7 @@ class Lywsd02:  # pylint: disable=R0902
         # self._tz_offset: int = self.tz_offset  # does not work
         self._tz_offset = None
         self._data = SensorData(None, None, None, None)
-        self._history_data: collections.OrderedDict = collections.OrderedDict()
+        self._history_data = collections.OrderedDict()
         self._context_depth: int = 0
 
         # define the number of times a device must cause an error before countermeasures are taken
