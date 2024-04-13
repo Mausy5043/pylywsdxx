@@ -76,7 +76,7 @@ class PyLyManager:
         return self.devices[name]["state"]
 
     def update(self, name: str) -> None:
-        """Update the device's state information
+        """Update the device's state information.
 
         Args:
             name: name of the device being updated
