@@ -32,6 +32,7 @@ class PyLyManager:
         self.mgr_debug: bool = debug
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
+        LOGGER.debug(f"Initialised pylywsdxx device manager.")
 
     def subscribe_to(self, mac, name, version=3) -> None:
         """Let the manager subscribe to a device.
@@ -51,6 +52,7 @@ class PyLyManager:
                 reusable=self.mgr_reusable,
                 debug=self.mgr_debug,
             )
+            LOGGER.info(f"Created v3 object for {mac}")
         else:
             _object = Lywsd02(
                 mac=mac,
@@ -58,6 +60,7 @@ class PyLyManager:
                 reusable=self.mgr_reusable,
                 debug=self.mgr_debug,
             )
+            LOGGER.info(f"Created v2 object for {mac}")
         self.device_db[name] = {
             "mac": mac,
             "object": _object,
@@ -73,6 +76,7 @@ class PyLyManager:
         Returns:
             dict containing state information
         """
+        LOGGER.debug(f"{name}")
         return self.device_db[name]["state"]
 
     def update(self, name: str) -> bool:
@@ -84,6 +88,7 @@ class PyLyManager:
         Returns:
             Nothing
         """
+        LOGGER.debug(f"{name} : ")
         device_data: Any = self.device_db[name]["object"].data
         self.device_db[name]["state"]["temperature"] = device_data.temperature
         self.device_db[name]["state"]["humidity"] = device_data.humidity
@@ -91,6 +96,7 @@ class PyLyManager:
         self.device_db[name]["state"]["datetime"] = dt.datetime.now()
         self.device_db[name]["state"]["epoch"] = int(dt.datetime.now().timestamp())
         self.device_db[name]["state"]["quality"] = 100
+        LOGGER.debug(f"{self.device_db[name]["state"]}")
         return True
 
     def update_all(self) -> bool:
