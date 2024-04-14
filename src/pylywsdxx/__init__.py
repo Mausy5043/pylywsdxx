@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import logging
+import logging.handlers
+
 from .device import Lywsd02
 from .device import Lywsd03
 from .device import PyLyConnectError
@@ -8,9 +11,6 @@ from .device import PyLyTimeout
 from .device import PyLyValueError
 from .manager import PyLyManager
 from .radioctl import ble_reset
-
-import logging
-import logging.handlers
 
 logging.basicConfig(
     level=logging.WARNING,
