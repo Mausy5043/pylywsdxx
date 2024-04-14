@@ -30,7 +30,7 @@ class PyLyManager:
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
 
-    def subscribe(self, mac: str, name: str, version: int = 3) -> None:
+    def subscribe_to(self, mac: str, name: str, version: int = 3) -> None:
         """Let the manager subscribe to a device.
 
         Args:
@@ -61,7 +61,7 @@ class PyLyManager:
             "state": {"mac": mac, "name": name, "quality": 100},
         }
 
-    def get_state(self, name: str):
+    def get_state_of(self, name: str):
         """Return the last known state of the given device.
 
         Args:
@@ -70,7 +70,7 @@ class PyLyManager:
         Returns:
             dict containing state information
         """
-        return self.device_db[name]["state"], self.device_db[name]["quality"]
+        return self.device_db[name]["state"]
 
     def update(self, name: str) -> bool:
         """Update the device's state information.
