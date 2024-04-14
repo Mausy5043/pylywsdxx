@@ -18,6 +18,7 @@ from .device import Lywsd03
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
+
 class PyLyManager:
     """Class to manage multiple LYWSD03MMC devices.
 

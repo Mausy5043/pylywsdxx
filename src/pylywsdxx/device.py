@@ -25,6 +25,7 @@ warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
+
 class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions."""
 
@@ -205,6 +206,7 @@ class Lywsd02:  # pylint: disable=R0902
                 self._tries -= 1
                 # fmt: off
                 warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+                LOGGER.warning(f"{message} ({self._tr_msg()})")
                 # fmt: on
                 if self._tries <= 0:
                     self._resets -= 1
@@ -231,6 +233,7 @@ class Lywsd02:  # pylint: disable=R0902
             self._tries -= 1
             # fmt: off
             warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+            LOGGER.warning(f"{message} ({self._tr_msg()})")
             # fmt: on
             if self._tries <= 0:
                 self._resets -= 1
