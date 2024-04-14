@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime as dt
+import logging
 import time
 from threading import Timer
 
@@ -15,6 +16,7 @@ from .device import Lywsd03
 # from .device import PyLyValueError
 #  from .radioctl import ble_reset
 
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 class PyLyManager:
     """Class to manage multiple LYWSD03MMC devices.
@@ -30,13 +32,13 @@ class PyLyManager:
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
 
-    def subscribe_to(self, mac: str, name: str, version: int = 3) -> None:
+    def subscribe_to(self, mac, name, version=3) -> None:
         """Let the manager subscribe to a device.
 
         Args:
-            mac: MAC address of the device
-            name: Name of the device. This name is used later to refer to the device, so should be unique.
-            version: If not 3, it is assumed that you want to subscribe to a LYWSD02 device.
+            mac (str): MAC address of the device
+            name (str): Name of the device. This name is used later to refer to the device, so should be unique.
+            version (int): If not 3, it is assumed that you want to subscribe to a LYWSD02 device.
 
         Returns:
             Nothing.
@@ -65,7 +67,7 @@ class PyLyManager:
         """Return the last known state of the given device.
 
         Args:
-            name: name of the device being requested
+            name (str): name of the device being requested
 
         Returns:
             dict containing state information
@@ -97,7 +99,9 @@ class PyLyManager:
         return _succes
 
 
-class RepeatedTimer(object):
+class RepeatedTimer:
+    """class to call a timer"""
+
     def __init__(self, interval: int, function, *args, **kwargs):
         self._timer = None
         self.interval: int = interval
@@ -124,7 +128,8 @@ class RepeatedTimer(object):
 
 
 def hello(name):
-    print("Hello %s!" % name)
+    print(f"Hello {name}!")
+
 
 if __name__ == "__main__":
     print("starting...")

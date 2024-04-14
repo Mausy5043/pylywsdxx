@@ -9,6 +9,21 @@ from .device import PyLyValueError
 from .manager import PyLyManager
 from .radioctl import ble_reset
 
+import logging
+import logging.handlers
+
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(module)s.%(funcName)s [%(levelname)s] - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.handlers.SysLogHandler(
+            address="/dev/log", facility=logging.handlers.SysLogHandler.LOG_DAEMON
+        )
+    ],
+)
+LOGGER: logging.Logger = logging.getLogger(__name__)
+
 __all__ = (
     "Lywsd02",
     "Lywsd03",

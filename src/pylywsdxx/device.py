@@ -2,6 +2,7 @@
 
 import collections
 import contextlib
+import logging
 import struct
 import time
 import warnings
@@ -22,6 +23,7 @@ UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes          
 
 warnings.filterwarnings(action="always", category=RuntimeWarning)
 
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions."""
