@@ -367,7 +367,7 @@ class Lywsd03(Lywsd02):
 
     # Locally cache the start time of the device.
     # This value won't change, and caching improves the performance getting the history data
-    _start_time = False
+    _start_time: datetime = datetime(1970, 1, 1)
 
     # Getting history data is very slow, so don't output progress updates
     enable_history_progress = False
@@ -457,7 +457,7 @@ class Lywsd03(Lywsd02):
         Returns:
             datetime: the start time of the device
         """
-        if not self._start_time:
+        if self._start_time == datetime(1970, 1, 1):
             start_time_delta = (
                 self.time[0] - datetime(1970, 1, 1) - timedelta(hours=self.tz_offset)
             )
