@@ -96,7 +96,7 @@ class PyLyManager:
         self.device_db[name]["state"]["datetime"] = dt.datetime.now()
         self.device_db[name]["state"]["epoch"] = int(dt.datetime.now().timestamp())
         self.device_db[name]["state"]["quality"] = 100
-        LOGGER.debug(f"{self.device_db[name]["state"]}")
+        # LOGGER.debug(f"{self.device_db[name][state]}")
         return True
 
     def update_all(self) -> bool:
