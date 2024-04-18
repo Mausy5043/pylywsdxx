@@ -14,7 +14,7 @@ from .radioctl import ble_reset
 
 logging.basicConfig(
     level=logging.WARNING,
-    format="%(module)s.%(funcName)s [%(levelname)s] - %(message)s",
+    format="pylywsd.%(module)s.%(funcName)s [%(levelname)s] - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
         logging.handlers.SysLogHandler(
