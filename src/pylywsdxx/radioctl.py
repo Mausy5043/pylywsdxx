@@ -3,9 +3,9 @@
 import logging
 import subprocess  # nosec B404
 import time
-import warnings
+# import warnings
 
-warnings.filterwarnings(action="always", category=RuntimeWarning)
+# warnings.filterwarnings(action="always", category=RuntimeWarning)
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
@@ -18,7 +18,7 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
         debug (bool): whether to provide debugging information.
 
     """
-    warnings.warn(message="Resetting BT-radio.", category=RuntimeWarning, stacklevel=2)
+    # warnings.warn(message="Resetting BT-radio.", category=RuntimeWarning, stacklevel=2)
     LOGGER.warning("Resetting BT-radio.")
 
     # Have you tried turning it off and on again?

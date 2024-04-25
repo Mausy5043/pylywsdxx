@@ -5,7 +5,7 @@ import contextlib
 import logging
 import struct
 import time
-import warnings
+# import warnings
 from datetime import datetime, timedelta
 
 from bluepy3 import btle  # noqa
@@ -21,7 +21,7 @@ UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte           
 UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes               READ
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
-warnings.filterwarnings(action="always", category=RuntimeWarning)
+# warnings.filterwarnings(action="always", category=RuntimeWarning)
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -205,7 +205,7 @@ class Lywsd02:  # pylint: disable=R0902
                     reraise = PyLyTimeout(f"-- {her} --")
                 self._tries -= 1
                 # fmt: off
-                warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+                # warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
                 LOGGER.warning(f"{message} ({self._tr_msg()})")
                 # fmt: on
                 if self._tries <= 0:
@@ -232,7 +232,7 @@ class Lywsd02:  # pylint: disable=R0902
                 reraise = PyLyException(f"-- {her} --")
             self._tries -= 1
             # fmt: off
-            warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+            # warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
             LOGGER.warning(f"{message} ({self._tr_msg()})")
             # fmt: on
             if self._tries <= 0:
