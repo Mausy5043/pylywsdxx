@@ -3,6 +3,7 @@
 import logging
 import subprocess  # nosec B404
 import time
+
 # import warnings
 
 # warnings.filterwarnings(action="always", category=RuntimeWarning)
@@ -18,6 +19,8 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
         debug (bool): whether to provide debugging information.
 
     """
+    if debug:
+        LOGGER.level = logging.DEBUG
     # warnings.warn(message="Resetting BT-radio.", category=RuntimeWarning, stacklevel=2)
     LOGGER.warning("Resetting BT-radio.")
 
