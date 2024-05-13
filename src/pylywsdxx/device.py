@@ -5,6 +5,7 @@ import contextlib
 import logging
 import struct
 import time
+
 # import warnings
 from datetime import datetime, timedelta
 
@@ -30,10 +31,10 @@ class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions."""
 
     def __init__(self, message: str):
-        self.message = message
+        self.message: str = message
 
-    def __str__(self):
-        msg = f"(pylywsdxx) {self.message}"
+    def __str__(self) -> str:
+        msg: str = f"(pylywsdxx) {self.message}"
         return msg
 
 
@@ -103,6 +104,8 @@ class Lywsd02:  # pylint: disable=R0902
             debug: whether to provide debugging info output.
         """
         self.debug: bool = debug
+        if debug:
+            LOGGER.level = logging.DEBUG
         self.reusable: bool = reusable
         btle.Debugging = self.debug
         self._mac: str = mac
@@ -474,8 +477,8 @@ class Lywsd03(Lywsd02):
         return super().time
 
     @time.setter
-    def time(self, dt: datetime):  # pylint: disable=W0613
-        """Disable setting the time and timezone.
+    def time(self, dt: datetime) -> None:  # pylint: disable=W0613
+        """Dummy to disable setting the time and timezone.
         LYWSD03MMCs don't have visible clocks.
 
         Args:
