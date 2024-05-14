@@ -6,7 +6,7 @@ import logging
 import time
 
 # from threading import Timer
-
+from statistics import median
 from typing import Any
 
 from .device import Lywsd02
@@ -58,6 +58,8 @@ class PyLyManager:
             LOGGER.level = logging.DEBUG
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
+        self.median_response_time = 10.0
+        self.response_list: list[float] = [self.median_response_time]
         LOGGER.debug("Initialised pylywsdxx device manager.")
 
     def subscribe_to(self, mac, name="", version=3) -> None:
@@ -97,6 +99,7 @@ class PyLyManager:
                 "next": 0,
             },
         }
+        self.response_list.append(self.desired_response_time)
 
     def get_state_of(self, name: str) -> dict[str, Any]:
         """Return the last known state of the given device.
@@ -120,7 +123,7 @@ class PyLyManager:
             nothing. Device info is updated internally.
         """
         LOGGER.debug(f"{name} : ")
-        t0 = time.time()
+        _t0 = time.time()
         device_data: Any = self.device_db[name]["object"].data
         self.device_db[name]["state"]["temperature"] = device_data.temperature
         self.device_db[name]["state"]["humidity"] = device_data.humidity
@@ -128,10 +131,26 @@ class PyLyManager:
         self.device_db[name]["state"]["battery"] = device_data.battery
         self.device_db[name]["state"]["datetime"] = dt.datetime.now()
         self.device_db[name]["state"]["epoch"] = int(dt.datetime.now().timestamp())
-        self.device_db[name]["state"]["quality"] = time.time() - t0
+        state_of_charge = self.device_db[name]["state"]["battery"]
+        previous_qos = self.device_db[name]["state"]["quality"]
+
+        response_time: float = time.time() - _t0
+        self.response_list.append(response_time)
+        if len(self.response_list) > 100:
+            self.response_list.pop(0)
+        self.median_response_time = median(self.response_list)
+        self.device_db[name]["state"]["quality"] = self.qos(state_of_charge, response_time, previous_qos)
         LOGGER.debug(f"{self.device_db[name]['state']} ")
 
     def update_all(self):
         """Update the state of all device_db known to the manager."""
         for device_to_update in self.device_db:
             self.update(name=device_to_update)
+
+    def qos(self, state_of_charge: float, response_time: float, previous: int):
+        """Determine the device's Quality of Service.
+        """
+        soc: float = state_of_charge / 100.0
+        rt: float =  max(1.0, self.median_response_time / response_time)
+        prev: float = previous / 100.0
+        return int(soc * rt * 100.0)
