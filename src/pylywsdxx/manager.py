@@ -6,7 +6,7 @@ import logging
 import time
 
 # from threading import Timer
-from statistics import median
+import statistics as stat
 from typing import Any
 
 from .device import Lywsd02
@@ -138,8 +138,10 @@ class PyLyManager:
         self.response_list.append(response_time)
         if len(self.response_list) > 100:
             self.response_list.pop(0)
-        self.median_response_time = median(self.response_list)
-        self.device_db[name]["state"]["quality"] = self.qos(state_of_charge, response_time, previous_qos)
+        self.median_response_time = stat.median(self.response_list)
+        self.device_db[name]["state"]["quality"] = self.qos(
+            state_of_charge, response_time, previous_qos
+        )
         LOGGER.debug(f"{self.device_db[name]['state']} ")
 
     def update_all(self):
@@ -151,6 +153,7 @@ class PyLyManager:
         """Determine the device's Quality of Service.
         """
         soc: float = state_of_charge / 100.0
-        rt: float =  max(1.0, self.median_response_time / response_time)
+        rt: float = max(1.0, self.median_response_time / response_time)
         prev: float = previous / 100.0
-        return int(soc * rt * 100.0)
+        new: float = stat.mean([prev, soc * rt])
+        return int(new * 100.0)
