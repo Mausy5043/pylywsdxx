@@ -26,6 +26,7 @@ for mac in args.mac:
 
 # Ask the manager to fetch the latest state of all subscribed devices
 try:
+    print("Updating device information...")
     mymanager.update_all()
 except (Exception,) as e:
     print(f"An exception of type {type(e).__name__} occured")
