@@ -41,6 +41,7 @@ The dict `state` is returned to the client. The rest is for internal use.
 }
 """
 
+
 class PyLyManager:
     """Class to manage multiple LYWSD03MMC devices.
 
