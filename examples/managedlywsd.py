@@ -16,10 +16,12 @@ mymanager = pyly.PyLyManager()
 # Tell the manager which devices you want to subscribe to
 for mac in args.mac:
     try:
-        client = mymanager.subscribe_to(mac)
+        mymanager.subscribe_to(mac)
         print(f"Added: {mac}")
     except (Exception,) as e:
-        print(f"An exception of type {type(e).__name__} occured when trying to subscribe to {mac}")
+        print(
+            f"An exception of type {type(e).__name__} occured when trying to subscribe to {mac}"
+        )
         print(e)
 
 # Ask the manager to fetch the latest state of all subscribed devices
@@ -34,9 +36,9 @@ for mac in args.mac:
     try:
         print(f"Fetching data for {mac}")
         data = mymanager.get_state_of(mac)
-        print(f"Temperature: {data["temperature"]}°C")
-        print(f"Humidity: {data["humidity"]}%")
-        print(f"Battery: {data["battery"]}% ({data["voltage"]} V)")
+        print(f"Temperature: {data['temperature']}°C")
+        print(f"Humidity: {data['humidity']}%")
+        print(f"Battery: {data['battery']}% ({data['voltage']} V)")
         print()
     except (Exception,) as e:
         print(f"An exception of type {type(e).__name__} occured")
