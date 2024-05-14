@@ -2,8 +2,10 @@
 
 import datetime as dt
 import logging
+
 import time
-from threading import Timer
+
+# from threading import Timer
 
 from typing import Any
 
@@ -18,6 +20,26 @@ from .device import Lywsd03
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
+"""
+Structure of the dict kept for each device.
+The dict `state` is returned to the client. The rest is for internal use.
+{
+    "state": {
+        "mac": mac,             # MAC address provided by the client
+        "name": name,           # (optional) device name provided by the client for easier identification
+        "quality": 100,         # int 0...100, expresses the devices QoS
+        "temperature": degC,    # latest temperature
+        "humidity": percent,    # latest humidity
+        "voltage": volts,       # latest voltage
+        "datetime": datetime,   # timestamp of when the above data was collected (datetime object)
+        "epoch": UN*X epoch,    # timestamp of when the above data was collected (UNIX epoch)
+        },
+    "object": _object,          # Object information (Lywsd02 or Lywsd03)
+    "control": {
+        "next": 0,
+        },
+}
+"""
 
 class PyLyManager:
     """Class to manage multiple LYWSD03MMC devices.
@@ -28,23 +50,29 @@ class PyLyManager:
     """
 
     def __init__(self, debug: bool = False) -> None:
-        self.device_db: dict[str, dict] = {}
+        """Initialise the manager."""
+        self.device_db: dict[str, dict[str, Any]] = {}
         self.mgr_debug: bool = debug
+        if debug:
+            LOGGER.level = logging.DEBUG
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
-        LOGGER.debug(f"Initialised pylywsdxx device manager.")
+        LOGGER.debug("Initialised pylywsdxx device manager.")
 
-    def subscribe_to(self, mac, name, version=3) -> None:
+    def subscribe_to(self, mac, name="", version=3) -> None:
         """Let the manager subscribe to a device.
 
         Args:
             mac (str): MAC address of the device
-            name (str): Name of the device. This name is used later to refer to the device, so should be unique.
+            name (str): Give the device a unique name. This name is used later to refer to the device.
             version (int): If not 3, it is assumed that you want to subscribe to a LYWSD02 device.
 
         Returns:
             Nothing.
         """
+        if not name:
+            name = str(mac)
+
         if version == 3:
             _object: Any = Lywsd03(
                 mac=mac,
@@ -62,12 +90,14 @@ class PyLyManager:
             )
             LOGGER.info(f"Created v2 object for {mac}")
         self.device_db[name] = {
-            "mac": mac,
-            "object": _object,
             "state": {"mac": mac, "name": name, "quality": 100},
+            "object": _object,
+            "control": {
+                "next": 0,
+            },
         }
 
-    def get_state_of(self, name: str):
+    def get_state_of(self, name: str) -> dict[str, Any]:
         """Return the last known state of the given device.
 
         Args:
@@ -79,14 +109,14 @@ class PyLyManager:
         LOGGER.debug(f"{name}")
         return self.device_db[name]["state"]
 
-    def update(self, name: str) -> bool:
+    def update(self, name: str):
         """Update the device's state information.
 
         Args:
             name: name of the device being updated
 
         Returns:
-            Nothing
+            nothing. Device info is updated internally.
         """
         LOGGER.debug(f"{name} : ")
         device_data: Any = self.device_db[name]["object"].data
@@ -97,51 +127,8 @@ class PyLyManager:
         self.device_db[name]["state"]["epoch"] = int(dt.datetime.now().timestamp())
         self.device_db[name]["state"]["quality"] = 100
         LOGGER.debug(f"{self.device_db[name]['state']} ")
-        return True
 
-    def update_all(self) -> bool:
+    def update_all(self):
         """Update the state of all device_db known to the manager."""
         for device_to_update in self.device_db:
-            _succes = self.update(name=device_to_update)
-        return _succes
-
-
-class RepeatedTimer:
-    """class to call a timer"""
-
-    def __init__(self, interval: int, function, *args, **kwargs):
-        self._timer = None
-        self.interval: int = interval
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
-        self.is_running = False
-        self.start()
-
-    def _run(self):
-        self.is_running = False
-        self.start()
-        self.function(*self.args, **self.kwargs)
-
-    def start(self):
-        if not self.is_running:
-            self._timer = Timer(self.interval, self._run)
-            self._timer.start()
-            self.is_running = True
-
-    def stop(self):
-        self._timer.cancel()
-        self.is_running = False
-
-
-def hello(name):
-    print(f"Hello {name}!")
-
-
-if __name__ == "__main__":
-    print("starting...")
-    rt = RepeatedTimer(1, hello, "World")  # it auto-starts, no need of rt.start()
-    try:
-        time.sleep(5)  # your long-running job goes here...
-    finally:
-        rt.stop()  # better in a try/finally block to make sure the program ends!
+            self.update(name=device_to_update)
