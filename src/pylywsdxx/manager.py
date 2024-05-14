@@ -124,7 +124,8 @@ class PyLyManager:
         device_data: Any = self.device_db[name]["object"].data
         self.device_db[name]["state"]["temperature"] = device_data.temperature
         self.device_db[name]["state"]["humidity"] = device_data.humidity
-        self.device_db[name]["state"]["battery"] = device_data.voltage
+        self.device_db[name]["state"]["voltage"] = device_data.voltage
+        self.device_db[name]["state"]["battery"] = device_data.battery
         self.device_db[name]["state"]["datetime"] = dt.datetime.now()
         self.device_db[name]["state"]["epoch"] = int(dt.datetime.now().timestamp())
         self.device_db[name]["state"]["quality"] = time.time() - t0
