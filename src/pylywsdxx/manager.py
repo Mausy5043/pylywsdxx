@@ -99,7 +99,7 @@ class PyLyManager:
                 "next": 0,
             },
         }
-        self.response_list.append(self.desired_response_time)
+        self.response_list.append(self.median_response_time)
 
     def get_state_of(self, name: str) -> dict[str, Any]:
         """Return the last known state of the given device.
