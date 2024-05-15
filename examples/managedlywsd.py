@@ -26,6 +26,7 @@ for mac in args.mac:
         print(e)
 
 while True:
+    time.sleep(60)
     # Ask the manager to fetch the latest state of all subscribed devices
     try:
         print("Updating device information...")
@@ -35,7 +36,6 @@ while True:
         print(e)
 
 #
-    time.sleep(60)
     for mac in args.mac:
         try:
             print(f"Fetching data for {mac}")
