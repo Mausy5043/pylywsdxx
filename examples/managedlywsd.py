@@ -35,8 +35,8 @@ except (Exception,) as e:
 
 #
 while True:
+    time.sleep(60)
     for mac in args.mac:
-        time.sleep(60)
         try:
             print(f"Fetching data for {mac}")
             data = mymanager.get_state_of(mac)
