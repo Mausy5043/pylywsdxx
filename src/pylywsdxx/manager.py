@@ -26,7 +26,7 @@ The dict `state` is returned to the client. The rest is for internal use.
 {
     "state": {
         "mac": mac,             # MAC address provided by the client
-        "name": name,           # (optional) device name provided by the client for easier identification
+        "id": dev_id,           # (optional) device id provided by the client for easier identification
         "quality": 100,         # (int) 0...100, expresses the devices QoS
         "temperature": degC,    # (float) latest temperature
         "humidity": percent,    # (int) latest humidity
@@ -63,19 +63,19 @@ class PyLyManager:
         self.response_list: list[float] = [self.median_response_time]
         LOGGER.debug("Initialised pylywsdxx device manager.")
 
-    def subscribe_to(self, mac, name="", version=3) -> None:
+    def subscribe_to(self, mac, dev_id="", version=3) -> None:
         """Let the manager subscribe to a device.
 
         Args:
             mac (str): MAC address of the device
-            name (str): Give the device a unique name. This name is used later to refer to the device.
+            dev_id (str): Give the device a unique id. This id is used later to refer to the device.
             version (int): If not 3, it is assumed that you want to subscribe to a LYWSD02 device.
 
         Returns:
             Nothing.
         """
-        if not name:
-            name = str(mac)
+        if not dev_id:
+            dev_id = str(mac)
 
         if version == 3:
             _object: Any = Lywsd03(
@@ -93,8 +93,8 @@ class PyLyManager:
                 debug=self.mgr_debug,
             )
             LOGGER.info(f"Created v2 object for {mac}")
-        self.device_db[name] = {
-            "state": {"mac": mac, "name": name, "quality": 100},
+        self.device_db[dev_id] = {
+            "state": {"mac": mac, "dev_id": dev_id, "quality": 100},
             "object": _object,
             "control": {
                 "next": 0,
@@ -102,53 +102,53 @@ class PyLyManager:
         }
         self.response_list.append(self.median_response_time)
 
-    def get_state_of(self, name: str) -> dict[str, Any]:
+    def get_state_of(self, dev_id: str) -> dict[str, Any]:
         """Return the last known state of the given device.
 
         Args:
-            name (str): name of the device being requested
+            dev_id (str): id of the device being requested
 
         Returns:
             dict containing state information
         """
-        LOGGER.debug(f"{name}")
-        return self.device_db[name]["state"]
+        LOGGER.debug(f"{dev_id}")
+        return self.device_db[dev_id]["state"]
 
-    def update(self, name: str):
+    def update(self, dev_id: str):
         """Update the device's state information.
 
         Args:
-            name: name of the device being updated
+            dev_id: id of the device being updated
 
         Returns:
             nothing. Device info is updated internally.
         """
-        LOGGER.debug(f"{name} : ")
+        LOGGER.debug(f"{id} : ")
         _t0 = time.time()
-        device_data: Any = self.device_db[name]["object"].data
-        self.device_db[name]["state"]["temperature"] = device_data.temperature
-        self.device_db[name]["state"]["humidity"] = device_data.humidity
-        self.device_db[name]["state"]["voltage"] = device_data.voltage
-        self.device_db[name]["state"]["battery"] = device_data.battery
-        self.device_db[name]["state"]["datetime"] = dt.datetime.now()
-        self.device_db[name]["state"]["epoch"] = int(dt.datetime.now().timestamp())
-        state_of_charge = self.device_db[name]["state"]["battery"]
-        previous_qos = self.device_db[name]["state"]["quality"]
+        device_data: Any = self.device_db[dev_id]["object"].data
+        self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
+        self.device_db[dev_id]["state"]["humidity"] = device_data.humidity
+        self.device_db[dev_id]["state"]["voltage"] = device_data.voltage
+        self.device_db[dev_id]["state"]["battery"] = device_data.battery
+        self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
+        self.device_db[dev_id]["state"]["epoch"] = int(dt.datetime.now().timestamp())
+        state_of_charge = self.device_db[dev_id]["state"]["battery"]
+        previous_qos = self.device_db[dev_id]["state"]["quality"]
 
         response_time: float = time.time() - _t0
         self.response_list.append(response_time)
         if len(self.response_list) > 100:
             self.response_list.pop(0)
         self.median_response_time = stat.median(self.response_list)
-        self.device_db[name]["state"]["quality"] = self.qos(
+        self.device_db[dev_id]["state"]["quality"] = self.qos(
             state_of_charge, response_time, previous_qos
         )
-        LOGGER.debug(f"{self.device_db[name]['state']} ")
+        LOGGER.debug(f"{self.device_db[dev_id]['state']} ")
 
     def update_all(self):
         """Update the state of all devices known to the manager."""
         for device_to_update in self.device_db:
-            self.update(name=device_to_update)
+            self.update(dev_id=device_to_update)
 
     def qos(self, state_of_charge: float, response_time: float, previous: int):
         """Determine the device's Quality of Service.
