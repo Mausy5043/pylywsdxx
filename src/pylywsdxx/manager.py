@@ -27,14 +27,15 @@ The dict `state` is returned to the client. The rest is for internal use.
     "state": {
         "mac": mac,             # MAC address provided by the client
         "name": name,           # (optional) device name provided by the client for easier identification
-        "quality": 100,         # int 0...100, expresses the devices QoS
-        "temperature": degC,    # latest temperature
-        "humidity": percent,    # latest humidity
-        "voltage": volts,       # latest voltage
+        "quality": 100,         # (int) 0...100, expresses the devices QoS
+        "temperature": degC,    # (float) latest temperature
+        "humidity": percent,    # (int) latest humidity
+        "voltage": volts,       # (float) latest voltage
+        "battery": percent,     # (float) current battery SoC
         "datetime": datetime,   # timestamp of when the above data was collected (datetime object)
         "epoch": UN*X epoch,    # timestamp of when the above data was collected (UNIX epoch)
         },
-    "object": _object,          # Object information (Lywsd02 or Lywsd03)
+    "object": _object,          # object information (Lywsd02 or Lywsd03)
     "control": {
         "next": 0,
         },
@@ -145,7 +146,7 @@ class PyLyManager:
         LOGGER.debug(f"{self.device_db[name]['state']} ")
 
     def update_all(self):
-        """Update the state of all device_db known to the manager."""
+        """Update the state of all devices known to the manager."""
         for device_to_update in self.device_db:
             self.update(name=device_to_update)
 
