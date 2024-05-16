@@ -62,6 +62,8 @@ class PyLyManager:
         self.median_response_time = 10.0
         self.response_list: list[float] = [self.median_response_time]
         LOGGER.debug("Initialised pylywsdxx device manager.")
+        LOGGER.warning("pylywsdxx warnings are active.")
+        LOGGER.error("pylywsdxx errors are active.")
 
     def subscribe_to(self, mac, dev_id="", version=3) -> None:
         """Let the manager subscribe to a device.
