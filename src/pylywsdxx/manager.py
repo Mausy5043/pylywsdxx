@@ -123,7 +123,7 @@ class PyLyManager:
         Returns:
             nothing. Device info is updated internally.
         """
-        LOGGER.debug(f"{id} : ")
+        LOGGER.debug(f"{dev_id} : ")
         _t0 = time.time()
         device_data: Any = self.device_db[dev_id]["object"].data
         self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
