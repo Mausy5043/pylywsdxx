@@ -125,11 +125,18 @@ class PyLyManager:
         """
         LOGGER.debug(f"{dev_id} : ")
         _t0 = time.time()
-        device_data: Any = self.device_db[dev_id]["object"].data
-        self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
-        self.device_db[dev_id]["state"]["humidity"] = device_data.humidity
-        self.device_db[dev_id]["state"]["voltage"] = device_data.voltage
-        self.device_db[dev_id]["state"]["battery"] = device_data.battery
+        excepted = False
+        try:
+            device_data: Any = self.device_db[dev_id]["object"].data
+            self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
+            self.device_db[dev_id]["state"]["humidity"] = device_data.humidity
+            self.device_db[dev_id]["state"]["voltage"] = device_data.voltage
+            self.device_db[dev_id]["state"]["battery"] = device_data.battery
+        except Exception as her:  # pylint: disable=W0703
+            excepted = True
+            LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")  # noqa: E501
+            # mf.syslog_trace(f"    {her}", syslog.LOG_DEBUG, DEBUG)
+            # mf.syslog_trace(traceprint(traceback.format_exc()), syslog.LOG_DEBUG, DEBUG)
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
         self.device_db[dev_id]["state"]["epoch"] = int(dt.datetime.now().timestamp())
         state_of_charge = self.device_db[dev_id]["state"]["battery"]
@@ -141,7 +148,7 @@ class PyLyManager:
             self.response_list.pop(0)
         self.median_response_time = stat.median(self.response_list)
         self.device_db[dev_id]["state"]["quality"] = self.qos(
-            state_of_charge, response_time, previous_qos
+            state_of_charge, response_time, previous_qos, excepted
         )
         LOGGER.debug(f"{self.device_db[dev_id]['state']} ")
 
@@ -150,10 +157,14 @@ class PyLyManager:
         for device_to_update in self.device_db:
             self.update(dev_id=device_to_update)
 
-    def qos(self, state_of_charge: float, response_time: float, previous: int):
+    def qos(self, state_of_charge: float, response_time: float, previous: int, excepted: bool):
         """Determine the device's Quality of Service.
         """
-        soc: float = state_of_charge / 100.0
+        q = 1.0
+        if excepted:
+            # in case of timeout or error in the communication we value the SoC less
+            q = 0.5
+        soc: float = state_of_charge / 100.0 * q
         rt: float = max(1.0, self.median_response_time / response_time)
         prev: float = previous / 100.0
         new: float = stat.mean([prev, soc * rt])
