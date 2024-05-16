@@ -170,7 +170,7 @@ class PyLyManager:
             state_of_charge = 50.0
         LOGGER.debug(f":: {state_of_charge} {response_time} {previous} {q}")
         soc: float = state_of_charge / 100.0 * q
-        rt: float = max(1.0, self.median_response_time / response_time)
+        rt: float = min(1.0, self.median_response_time / response_time)
         prev: float = previous / 100.0
         new: float = stat.mean([prev, soc * rt])
         LOGGER.debug(f"== {soc} {rt} {prev} => {new}")
