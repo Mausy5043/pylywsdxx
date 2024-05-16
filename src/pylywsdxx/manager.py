@@ -166,6 +166,8 @@ class PyLyManager:
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
             q = 0.5
+        if not state_of_charge:
+            state_of_charge = 50.0
         LOGGER.debug(f":: {state_of_charge} {response_time} {previous} {q}")
         soc: float = state_of_charge / 100.0 * q
         rt: float = max(1.0, self.median_response_time / response_time)
