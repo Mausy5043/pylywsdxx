@@ -96,7 +96,7 @@ class PyLyManager:
             )
             LOGGER.info(f"Created v2 object for {mac}")
         self.device_db[dev_id] = {
-            "state": {"mac": mac, "dev_id": dev_id, "quality": 100},
+            "state": {"mac": mac, "dev_id": dev_id, "quality": 33},
             "object": _object,
             "control": {
                 "next": 0,
