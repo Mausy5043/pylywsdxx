@@ -82,8 +82,8 @@ class Lywsd02:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    _MAX_TRIES = 6
-    _MAX_RESETS = 3
+    _MAX_TRIES = 3
+    _MAX_RESETS = 1
 
     def __init__(
         self,
@@ -126,7 +126,7 @@ class Lywsd02:  # pylint: disable=R0902
 
     def _set_tries(self) -> None:
         """Initialise a retry counter"""
-        self._tries = self._MAX_TRIES if self.reusable else 1
+        self._tries: int = self._MAX_TRIES if self.reusable else 1
 
     def _set_resets(self) -> None:
         """Initialise a reset counter"""
@@ -155,6 +155,7 @@ class Lywsd02:  # pylint: disable=R0902
             if not self._peripheral.waitForNotifications(self._notification_timeout):
                 if self.debug:
                     print(f"|-- Timeout waiting for {self._mac}")
+                    LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
                 raise PyLyTimeout(
                     f"No data from device {self._mac} for {self._notification_timeout} seconds"
                 )
@@ -195,10 +196,11 @@ class Lywsd02:  # pylint: disable=R0902
         if self._context_depth == 0:
             if self.debug:
                 print(f"|-> Connecting to {self._mac}")
+                LOGGER.debug(f"|-> Connecting to {self._mac}")
             try:
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
             except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
-                message = ""
+                message: str = ""
                 reraise = PyLyException(f"-- {her} --")
                 if isinstance(her, btle.BTLEConnectError):
                     message = f"Device ({self._mac}) connection failed."
@@ -207,10 +209,7 @@ class Lywsd02:  # pylint: disable=R0902
                     message = f"Device ({self._mac}) timed out on connect."
                     reraise = PyLyTimeout(f"-- {her} --")
                 self._tries -= 1
-                # fmt: off
-                # warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
                 LOGGER.warning(f"{message} ({self._tr_msg()})")
-                # fmt: on
                 if self._tries <= 0:
                     self._resets -= 1
                     ble_reset(debug=self.debug)
@@ -235,7 +234,6 @@ class Lywsd02:  # pylint: disable=R0902
                 reraise = PyLyException(f"-- {her} --")
             self._tries -= 1
             # fmt: off
-            # warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
             LOGGER.warning(f"{message} ({self._tr_msg()})")
             # fmt: on
             if self._tries <= 0:
@@ -255,6 +253,7 @@ class Lywsd02:  # pylint: disable=R0902
             if self._context_depth == 0:
                 if self.debug:
                     print(f"|-< Disconnecting from {self._mac}")
+                    LOGGER.debug(f"|-< Disconnecting from {self._mac}")
                 self._peripheral.disconnect()
 
     @property
@@ -358,6 +357,9 @@ class Lywsd03(Lywsd02):
     # Temperature units specific to LYWSD03MMC devices
     UNITS = {b"\x01": "F", b"\x00": "C"}
     UNITS_CODES = {"F": b"\x01", "C": b"\x00"}
+
+    _MAX_TRIES = 6
+    _MAX_RESETS = 3
 
     # CR2025 / CR2032 maximum theoretical voltage = 3.4 V
     # ref. Table 1;
