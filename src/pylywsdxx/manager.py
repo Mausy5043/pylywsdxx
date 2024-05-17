@@ -157,7 +157,7 @@ class PyLyManager:
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
             q = 0.5
-        LOGGER.debug(f":: {state_of_charge} {response_time} {previous_q} {q}")
+        LOGGER.debug(f":: {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
         self.response_list.append(response_time)
         if len(self.response_list) > 100:
             self.response_list.pop(0)
@@ -167,5 +167,5 @@ class PyLyManager:
         rt: float = min(1.0, self.median_response_time / response_time)
         prev_q: float = previous_q / 100.0
         new: float = stat.mean([prev_q, soc * rt])
-        LOGGER.debug(f"== {soc} {rt} {prev_q} => {new}")
+        LOGGER.debug(f"== {soc} {rt:.1f}s {prev_q} => {new}")
         return int(new * 100.0)
