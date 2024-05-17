@@ -170,5 +170,5 @@ class PyLyManager:
         rt: float = min(1.0, self.median_response_time / response_time)
         prev_q: float = previous_q / 100.0
         new: float = stat.mean([prev_q, soc * rt])
-        LOGGER.debug(f"== {soc} {rt:.1f}s {prev_q} => {new}")
+        LOGGER.debug(f"== {soc:.4f} * {rt:.4f} > {prev_q} => {new:.4f}")
         return int(new * 100.0)
