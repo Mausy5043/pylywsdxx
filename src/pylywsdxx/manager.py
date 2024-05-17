@@ -53,17 +53,16 @@ class PyLyManager:
 
     def __init__(self, debug: bool = False) -> None:
         """Initialise the manager."""
+        LOGGER.info("Initialising pylywsdxx device manager.")
         self.device_db: dict[str, dict[str, Any]] = {}
         self.mgr_debug: bool = debug
         if debug:
             LOGGER.level = logging.DEBUG
+            LOGGER.debug("Debugging on.")
         self.mgr_notification_timeout: float = 11.0
         self.mgr_reusable: bool = False
         self.median_response_time = 10.0
         self.response_list: list[float] = [self.median_response_time]
-        LOGGER.debug("Initialised pylywsdxx device manager.")
-        LOGGER.warning("pylywsdxx warnings are active.")
-        LOGGER.error("pylywsdxx errors are active.")
 
     def subscribe_to(self, mac, dev_id="", version=3) -> None:
         """Let the manager subscribe to a device.
@@ -96,7 +95,7 @@ class PyLyManager:
             )
             LOGGER.info(f"Created v2 object for {mac}")
         self.device_db[dev_id] = {
-            "state": {"mac": mac, "dev_id": dev_id, "quality": 33},
+            "state": {"mac": mac, "dev_id": dev_id, "quality": 33, "battery": 50},
             "object": _object,
             "control": {
                 "next": 0,
@@ -137,21 +136,13 @@ class PyLyManager:
         except Exception as her:  # pylint: disable=W0703
             excepted = True
             LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")  # noqa: E501
-            # mf.syslog_trace(f"    {her}", syslog.LOG_DEBUG, DEBUG)
-            # mf.syslog_trace(traceprint(traceback.format_exc()), syslog.LOG_DEBUG, DEBUG)
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
         self.device_db[dev_id]["state"]["epoch"] = int(dt.datetime.now().timestamp())
-        state_of_charge = self.device_db[dev_id]["state"]["battery"]
-        previous_qos = self.device_db[dev_id]["state"]["quality"]
-
+        state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
+        previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
-        self.response_list.append(response_time)
-        if len(self.response_list) > 100:
-            self.response_list.pop(0)
-        self.median_response_time = stat.median(self.response_list)
-        self.device_db[dev_id]["state"]["quality"] = self.qos(
-            state_of_charge, response_time, previous_qos, excepted
-        )
+
+        self.device_db[dev_id]["state"]["quality"] = self.qos(state_of_charge, response_time, previous_qos, excepted)
         LOGGER.debug(f"{self.device_db[dev_id]['state']} ")
 
     def update_all(self):
@@ -159,19 +150,22 @@ class PyLyManager:
         for device_to_update in self.device_db:
             self.update(dev_id=device_to_update)
 
-    def qos(self, state_of_charge: float, response_time: float, previous: int, excepted: bool):
+    def qos(self, state_of_charge: float, response_time: float, previous_q: int, excepted: bool):
         """Determine the device's Quality of Service.
         """
         q = 1.0
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
             q = 0.5
-        if not state_of_charge:
-            state_of_charge = 50.0
-        LOGGER.debug(f":: {state_of_charge} {response_time} {previous} {q}")
+        LOGGER.debug(f":: {state_of_charge} {response_time} {previous_q} {q}")
+        self.response_list.append(response_time)
+        if len(self.response_list) > 100:
+            self.response_list.pop(0)
+        self.median_response_time = stat.median(self.response_list)
+
         soc: float = state_of_charge / 100.0 * q
         rt: float = min(1.0, self.median_response_time / response_time)
-        prev: float = previous / 100.0
-        new: float = stat.mean([prev, soc * rt])
-        LOGGER.debug(f"== {soc} {rt} {prev} => {new}")
+        prev_q: float = previous_q / 100.0
+        new: float = stat.mean([prev_q, soc * rt])
+        LOGGER.debug(f"== {soc} {rt} {prev_q} => {new}")
         return int(new * 100.0)
