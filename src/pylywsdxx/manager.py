@@ -135,14 +135,18 @@ class PyLyManager:
             self.device_db[dev_id]["state"]["battery"] = device_data.battery
         except Exception as her:  # pylint: disable=W0703
             excepted = True
-            LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")  # noqa: E501
+            # fmt: off
+            LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501
+            # fmt: on
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
         self.device_db[dev_id]["state"]["epoch"] = int(dt.datetime.now().timestamp())
         state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
 
-        self.device_db[dev_id]["state"]["quality"] = self.qos(state_of_charge, response_time, previous_qos, excepted)
+        self.device_db[dev_id]["state"]["quality"] = self.qos(
+            state_of_charge, response_time, previous_qos, excepted
+        )
         LOGGER.debug(f"{self.device_db[dev_id]['state']} ")
 
     def update_all(self):
@@ -151,8 +155,7 @@ class PyLyManager:
             self.update(dev_id=device_to_update)
 
     def qos(self, state_of_charge: float, response_time: float, previous_q: int, excepted: bool):
-        """Determine the device's Quality of Service.
-        """
+        """Determine the device's Quality of Service."""
         q = 1.0
         if excepted:
             # in case of timeout or error in the communication we value the SoC less

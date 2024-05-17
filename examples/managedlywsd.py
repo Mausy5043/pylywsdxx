@@ -35,7 +35,7 @@ while True:
         print(f"An exception of type {type(e).__name__} occured")
         print(e)
 
-#
+    #
     for mac in args.mac:
         try:
             print(f"Fetching data for {mac}")
