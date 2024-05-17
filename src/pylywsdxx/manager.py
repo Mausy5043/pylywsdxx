@@ -127,6 +127,7 @@ class PyLyManager:
         LOGGER.debug(f"{dev_id} : ")
         _t0 = time.time()
         excepted = False
+        valid_data = False
         try:
             device_data: Any = self.device_db[dev_id]["object"].data
             self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
@@ -143,9 +144,10 @@ class PyLyManager:
         state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
-
+        if 'temperature' in self.device_db[dev_id]["state"]:
+            valid_data = True
         self.device_db[dev_id]["state"]["quality"] = self.qos(
-            state_of_charge, response_time, previous_qos, excepted
+            state_of_charge, response_time, previous_qos, excepted, valid_data
         )
         LOGGER.debug(f"{self.device_db[dev_id]['state']} ")
 
@@ -154,8 +156,10 @@ class PyLyManager:
         for device_to_update in self.device_db:
             self.update(dev_id=device_to_update)
 
-    def qos(self, state_of_charge: float, response_time: float, previous_q: int, excepted: bool):
+    def qos(self, state_of_charge: float, response_time: float, previous_q: int, excepted: bool, valid: bool):
         """Determine the device's Quality of Service."""
+        if not valid:
+            return 0.0
         q = 1.0
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
