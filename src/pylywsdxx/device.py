@@ -212,7 +212,8 @@ class Lywsd02:  # pylint: disable=R0902
                 LOGGER.warning(f"{message} ({self._tr_msg()})")
                 if self._tries <= 0:
                     self._resets -= 1
-                    ble_reset(debug=self.debug)
+                    # ble_reset(debug=self.debug)
+                    LOGGER.error(f"BLE RESET requested ({self._tr_msg()})")
                     self._set_tries()
                     if self._resets <= 0:
                         # re-raise because apparently resetting the radio doesn't work
