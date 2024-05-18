@@ -67,6 +67,7 @@ class PyLyManager:
         self.mgr_reusable: bool = False
         self.median_response_time: float = 11.5
         self.response_list: list[float] = [self.median_response_time]
+        # self.fail_count: int = 0
 
     def subscribe_to(self, mac, dev_id="", version=3) -> None:
         """Let the manager subscribe to a device.
@@ -182,6 +183,7 @@ class PyLyManager:
         fail_count = 0
         for device_to_check in self.device_db:
             fail_count += self.device_db[device_to_check]["control"]["fail"]
+        if fail_count > 0:
             LOGGER.warning(f"fail count = {fail_count}")
 
     def qos_device(
