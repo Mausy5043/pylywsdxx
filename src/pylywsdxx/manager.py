@@ -52,7 +52,7 @@ class PyLyManager:
     """
 
     __INITIAL_QOS: int = 33
-    __WARNING_QOS: int = 33
+    __WARNING_QOS: int = 18
     __INITIAL_SOC: int = 50
 
     def __init__(self, debug: bool = False) -> None:
@@ -211,7 +211,7 @@ class PyLyManager:
         # Determine QoS
         new_q: float = stat.mean([prev_q, soc * rt * q])
         msg = f"{id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
-        if new_q < self.__WARNING_QOS:
+        if new_q < (self.__WARNING_QOS / 100.):
             LOGGER.warning(msg)
         else:
             LOGGER.debug(msg)
