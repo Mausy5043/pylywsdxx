@@ -99,6 +99,7 @@ class PyLyManager:
             "object": _object,
             "control": {
                 "next": 0,
+                "fail": 0,
             },
         }
         self.response_list.append(self.median_response_time)
