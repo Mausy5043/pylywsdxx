@@ -125,7 +125,7 @@ class PyLyManager:
         LOGGER.debug(f"{dev_id} : {self.device_db[dev_id]['state']}")
         return self.device_db[dev_id]["state"]
 
-    def update(self, dev_id: str):
+    def update(self, dev_id: str) -> None:
         """Update the device's state information.
 
         Args:
@@ -174,7 +174,7 @@ class PyLyManager:
             self.device_db[dev_id]["control"]["fail"] = max([0, _fail - 1])
         LOGGER.debug(f"{self.device_db[dev_id]['state']}")
 
-    def update_all(self):
+    def update_all(self) -> None:
         """Update the state of all devices known to the manager."""
         for device_to_update in self.device_db:
             self.update(dev_id=device_to_update)
