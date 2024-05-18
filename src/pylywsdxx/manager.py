@@ -51,6 +51,10 @@ class PyLyManager:
     * mitigate device errors and take countermeasures centrally
     """
 
+    __INITIAL_QOS: int = 33
+    __WARNING_QOS: int = 33
+    __INITIAL_SOC: int = 50
+
     def __init__(self, debug: bool = False) -> None:
         """Initialise the manager."""
         LOGGER.info("Initialising pylywsdxx device manager.")
@@ -59,9 +63,9 @@ class PyLyManager:
         if debug:
             LOGGER.level = logging.DEBUG
             LOGGER.debug("Debugging on.")
-        self.mgr_notification_timeout: float = 11.0
+        self.mgr_notification_timeout: float = 11.5
         self.mgr_reusable: bool = False
-        self.median_response_time = 10.0
+        self.median_response_time: float = 11.5
         self.response_list: list[float] = [self.median_response_time]
 
     def subscribe_to(self, mac, dev_id="", version=3) -> None:
@@ -95,7 +99,12 @@ class PyLyManager:
             )
             LOGGER.info(f"Created v2 object for {mac}")
         self.device_db[dev_id] = {
-            "state": {"mac": mac, "dev_id": dev_id, "quality": 33, "battery": 50},
+            "state": {
+                "mac": mac,
+                "dev_id": dev_id,
+                "quality": self.__INITIAL_QOS,
+                "battery": self.__INITIAL_SOC,
+            },
             "object": _object,
             "control": {
                 "next": 0,
@@ -113,7 +122,7 @@ class PyLyManager:
         Returns:
             dict containing state information
         """
-        LOGGER.debug(f"{dev_id}")
+        LOGGER.debug(f"{dev_id} : {self.device_db[dev_id]['state']}")
         return self.device_db[dev_id]["state"]
 
     def update(self, dev_id: str):
@@ -148,8 +157,8 @@ class PyLyManager:
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
 
-        # check if we have some data so the client won't have to
-        if 'temperature' in self.device_db[dev_id]["state"]:
+        # check if we have some data, so the client won't have to
+        if "temperature" in self.device_db[dev_id]["state"]:
             valid_data = True
 
         # determine the device's QoS
@@ -159,8 +168,9 @@ class PyLyManager:
         # get data to determine Radio QoS
         if excepted:
             self.device_db[dev_id]["control"]["fail"] += 1
+            LOGGER.warning(f"{dev_id} : fail score: {self.device_db[dev_id]['control']['fail']}")
         else:
-            _fail = self.device_db[dev_id]["control"]["fail"]
+            _fail: int = self.device_db[dev_id]["control"]["fail"]
             self.device_db[dev_id]["control"]["fail"] = max([0, _fail - 1])
         LOGGER.debug(f"{self.device_db[dev_id]['state']}")
 
@@ -170,7 +180,15 @@ class PyLyManager:
             self.update(dev_id=device_to_update)
         # check radio
 
-    def qos_device(self, id, state_of_charge: float, response_time: float, previous_q: int, excepted: bool, valid: bool) -> int:
+    def qos_device(
+        self,
+        id,
+        state_of_charge: float,
+        response_time: float,
+        previous_q: int,
+        excepted: bool,
+        valid: bool,
+    ) -> int:
         """Determine the device's Quality of Service."""
         if not valid:
             return 0
@@ -178,13 +196,13 @@ class PyLyManager:
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
             q = 0.5
-        LOGGER.debug(f"{id} :: {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
+        LOGGER.debug(f"{id} : {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
         #
         self.response_list.append(response_time)
         if len(self.response_list) > 100:
             self.response_list.pop(0)
         self.median_response_time = stat.median(self.response_list)
-        LOGGER.debug(f"median response time : {self.median_response_time}")
+        LOGGER.debug(f"{id} median RT : {self.median_response_time}")
 
         # normalise parameters
         soc: float = state_of_charge / 100.0
@@ -192,8 +210,8 @@ class PyLyManager:
         prev_q: float = previous_q / 100.0
         # Determine QoS
         new_q: float = stat.mean([prev_q, soc * rt * q])
-        msg = f"{id} == q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
-        if new_q < 10:
+        msg = f"{id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
+        if new_q < self.__WARNING_QOS:
             LOGGER.warning(msg)
         else:
             LOGGER.debug(msg)
