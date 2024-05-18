@@ -186,7 +186,7 @@ class PyLyManager:
 
     def qos_device(
         self,
-        id,
+        dev_id,
         state_of_charge: float,
         response_time: float,
         previous_q: int,
@@ -200,13 +200,13 @@ class PyLyManager:
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
             q = 0.5
-        LOGGER.debug(f"{id} : {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
+        LOGGER.debug(f"{dev_id} : {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
         #
         self.response_list.append(response_time)
         if len(self.response_list) > 100:
             self.response_list.pop(0)
         self.median_response_time = stat.median(self.response_list)
-        LOGGER.debug(f"{id} median RT : {self.median_response_time}")
+        LOGGER.debug(f"{dev_id} median RT : {self.median_response_time}")
 
         # normalise parameters
         soc: float = state_of_charge / 100.0
@@ -214,8 +214,8 @@ class PyLyManager:
         prev_q: float = previous_q / 100.0
         # Determine QoS
         new_q: float = stat.mean([prev_q, soc * rt * q])
-        msg = f"{id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
-        if new_q < (self.__WARNING_QOS / 100.):
+        msg = f"{dev_id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
+        if new_q < (self.__WARNING_QOS / 100.0):
             LOGGER.warning(msg)
         else:
             LOGGER.debug(msg)
