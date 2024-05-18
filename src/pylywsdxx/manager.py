@@ -140,17 +140,29 @@ class PyLyManager:
             # fmt: off
             LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501
             # fmt: on
+
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
         self.device_db[dev_id]["state"]["epoch"] = int(dt.datetime.now().timestamp())
+
         state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
+
+        # check if we have some data so the client won't have to
         if 'temperature' in self.device_db[dev_id]["state"]:
             valid_data = True
-        self.device_db[dev_id]["state"]["quality"] = self.qos(
-            state_of_charge, response_time, previous_qos, excepted, valid_data
+
+        # determine the device's QoS
+        self.device_db[dev_id]["state"]["quality"] = self.qos_device(
+            dev_id, state_of_charge, response_time, previous_qos, excepted, valid_data
         )
-        LOGGER.debug(f"{self.device_db[dev_id]['state']} ")
+        # get data to determine Radio QoS
+        if excepted:
+            self.device_db[dev_id]["control"]["fail"] += 1
+        else:
+            _fail = self.device_db[dev_id]["control"]["fail"]
+            self.device_db[dev_id]["control"]["fail"] = max([0, _fail - 1])
+        LOGGER.debug(f"{self.device_db[dev_id]['state']}")
 
     def update_all(self):
         """Update the state of all devices known to the manager."""
