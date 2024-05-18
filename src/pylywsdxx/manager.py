@@ -168,24 +168,34 @@ class PyLyManager:
         """Update the state of all devices known to the manager."""
         for device_to_update in self.device_db:
             self.update(dev_id=device_to_update)
+        # check radio
 
-    def qos(self, state_of_charge: float, response_time: float, previous_q: int, excepted: bool, valid: bool):
+    def qos_device(self, id, state_of_charge: float, response_time: float, previous_q: int, excepted: bool, valid: bool) -> int:
         """Determine the device's Quality of Service."""
         if not valid:
-            return 0.0
+            return 0
         q = 1.0
         if excepted:
             # in case of timeout or error in the communication we value the SoC less
             q = 0.5
-        LOGGER.debug(f":: {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
+        LOGGER.debug(f"{id} :: {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
+        #
         self.response_list.append(response_time)
         if len(self.response_list) > 100:
             self.response_list.pop(0)
         self.median_response_time = stat.median(self.response_list)
+        LOGGER.debug(f"median response time : {self.median_response_time}")
 
-        soc: float = state_of_charge / 100.0 * q
+        # normalise parameters
+        soc: float = state_of_charge / 100.0
         rt: float = min(1.0, self.median_response_time / response_time)
         prev_q: float = previous_q / 100.0
-        new: float = stat.mean([prev_q, soc * rt])
-        LOGGER.debug(f"== {soc:.4f} * {rt:.4f} > {prev_q} => {new:.4f}")
-        return int(new * 100.0)
+        # Determine QoS
+        new_q: float = stat.mean([prev_q, soc * rt * q])
+        msg = f"{id} == q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
+        if new_q < 10:
+            LOGGER.warning(msg)
+        else:
+            LOGGER.debug(msg)
+
+        return int(new_q * 100.0)
