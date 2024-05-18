@@ -139,6 +139,7 @@ class PyLyManager:
         _t0 = time.time()
         excepted = False
         valid_data = False
+        # fmt: off
         try:
             device_data: Any = self.device_db[dev_id]["object"].data
             self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
@@ -147,9 +148,8 @@ class PyLyManager:
             self.device_db[dev_id]["state"]["battery"] = device_data.battery
         except Exception as her:  # pylint: disable=W0703
             excepted = True
-            # fmt: off
             LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501
-            # fmt: on
+
         # record the time
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
         self.device_db[dev_id]["state"]["epoch"] = self.device_db[dev_id]["state"]["datetime"].timestamp()
@@ -157,8 +157,9 @@ class PyLyManager:
         state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
+        # fmt: on
 
-        # check if we have some data, so the client won't have to
+        # check if we have some data, so the client won't have to bork
         if "temperature" in self.device_db[dev_id]["state"]:
             valid_data = True
 
