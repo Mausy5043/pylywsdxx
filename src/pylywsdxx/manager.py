@@ -150,9 +150,9 @@ class PyLyManager:
             # fmt: off
             LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501
             # fmt: on
-
+        # record the time
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
-        self.device_db[dev_id]["state"]["epoch"] = int(dt.datetime.now().timestamp())
+        self.device_db[dev_id]["state"]["epoch"] = self.device_db[dev_id]["state"]["datetime"].timestamp()
 
         state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
