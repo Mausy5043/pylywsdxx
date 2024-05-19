@@ -63,7 +63,7 @@ class PyLyManager:
         self.mgr_reusable: bool = False
         self.median_response_time: float = 11.5
         self.response_list: list[float] = [self.median_response_time]
-        # self.fail_count: int = 0
+        self.radio_state_reset: float = time.time()
 
     def subscribe_to(self, mac, dev_id="", version=3) -> None:
         """Let the manager subscribe to a device.
@@ -104,7 +104,7 @@ class PyLyManager:
             },
             "object": _object,
             "control": {
-                "next": 0,
+                "next": time.time(),
                 "fail": 0,
             },
         }
@@ -163,8 +163,8 @@ class PyLyManager:
         self.device_db[dev_id]["state"]["quality"] = self.qos_device(
             dev_id, state_of_charge, response_time, previous_qos, excepted, valid_data
         )
-        # get data to determine Radio QoS
-        if excepted:
+        # check if device is failing (i.e. exception or low QoS)
+        if excepted or self.device_db[dev_id]["state"]["quality"] < 6:
             self.device_db[dev_id]["control"]["fail"] += 1
             LOGGER.warning(f"{dev_id} : fail score: {self.device_db[dev_id]['control']['fail']}")
         else:
@@ -174,13 +174,13 @@ class PyLyManager:
 
     def update_all(self) -> None:
         """Update the state of all devices known to the manager."""
-        for device_to_update in self.device_db:
-            self.update(dev_id=device_to_update)
+        for dev, dev_state in self.device_db.items():
+            t_next: float = time.time() - dev_state["control"]["next"]
+            if t_next > 0:
+                self.update(dev_id=dev)
+                dev_state["control"]["next"] = time.time()
         # check radio
-        fail_count = 0
-        for _, device_state in self.device_db.items():
-            fail_count += device_state["control"]["fail"]
-        self.handle_fails(fail_count)
+        self.handle_fails()
 
     def qos_device(
         self,
@@ -213,7 +213,7 @@ class PyLyManager:
         soc: float = state_of_charge / 100.0
         rt: float = min(1.0, self.median_response_time / response_time)
         prev_q: float = previous_q / 100.0
-        # Determine QoS
+        # Determine QoS and log message to report QoS
         new_q: float = stat.mean([prev_q, soc * rt * q])
         msg = f"{dev_id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
         if new_q < (self.__WARNING_QOS / 100.0):
@@ -223,21 +223,33 @@ class PyLyManager:
 
         return int(new_q * 100.0)
 
-    def handle_fails(self, fails) -> None:
+    def handle_fails(self) -> None:
         """Handle failing devices.
         Log a warning when devices have failed to provide data.
         Reset the BT-radio if multiple devices (more than 50%) have failed.
         """
-        if not fails:
+        fail_count = 0
+        for _, device_state in self.device_db.items():
+            fail_score: int = device_state["control"]["fail"]
+            if fail_score > 5:
+                # devices that keep failing are put on hold for a while
+                device_state["control"]["next"] = time.time() + (3 * 3600.0)
+            fail_count += 1 if fail_score else 0
+
+        if not fail_count:
+            # skip the rest if everything is okay
             return
 
-        msg: str =f"fail count = {fails}"
+        msg: str = f"fail count = {fail_count}"
         dev_cnt: int = len(self.device_db)
-        if fails > int(dev_cnt / 2):
+        rst_time: float = time.time() - self.radio_state_reset
+        if fail_count > int(dev_cnt / 2) and rst_time >= 0:
             LOGGER.error(msg)
             ble_reset()
+            # prevent repeated resets of the radio
+            self.radio_state_reset = time.time() + 3600.0
             return
 
-        if fails > 0:
+        if fail_count > 0:
             LOGGER.warning(msg)
             return
