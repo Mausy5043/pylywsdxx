@@ -136,7 +136,7 @@ class PyLyManager:
             nothing. Device info is updated internally.
         """
         LOGGER.debug(f"{dev_id} : ")
-        _t0 = time.time()
+        _t0: float = time.time()
         excepted = False
         valid_data = False
         # fmt: off
