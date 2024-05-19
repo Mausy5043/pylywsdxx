@@ -12,11 +12,7 @@ from typing import Any
 from .device import Lywsd02
 from .device import Lywsd03
 
-# from .device import PyLyConnectError
-# from .device import PyLyException
-# from .device import PyLyTimeout
-# from .device import PyLyValueError
-#  from .radioctl import ble_reset
+from .radioctl import ble_reset
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -184,8 +180,7 @@ class PyLyManager:
         fail_count = 0
         for _, device_state in self.device_db.items():
             fail_count += device_state["control"]["fail"]
-        if fail_count > 0:
-            LOGGER.warning(f"fail count = {fail_count}")
+        self.handle_fails(fail_count)
 
     def qos_device(
         self,
@@ -227,3 +222,22 @@ class PyLyManager:
             LOGGER.debug(msg)
 
         return int(new_q * 100.0)
+
+    def handle_fails(self, fails) -> None:
+        """Handle failing devices.
+        Log a warning when devices have failed to provide data.
+        Reset the BT-radio if multiple devices (more than 50%) have failed.
+        """
+        if not fails:
+            return
+
+        msg: str =f"fail count = {fails}"
+        dev_cnt: int = len(self.device_db)
+        if fails > int(dev_cnt / 2):
+            LOGGER.error(msg)
+            ble_reset()
+            return
+
+        if fails > 0:
+            LOGGER.warning(msg)
+            return
