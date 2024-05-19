@@ -5,11 +5,12 @@ import contextlib
 import logging
 import struct
 import time
+from typing import Generator, Literal, Union
 
 # import warnings
 from datetime import datetime, timedelta
 
-from bluepy3 import btle  # noqa
+from bluepy3 import btle
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
@@ -175,7 +176,7 @@ class Lywsd02:  # pylint: disable=R0902
         )
 
     def _subscribe(self, uuid, callback) -> None:
-        self._peripheral.setDelegate(self)
+        self._peripheral.setDelegate(self)  # type: ignore[no-untyped-call]
         ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
         self._handles[ch.getHandle()] = callback
         desc = ch.getDescriptors(forUUID=0x2902)[0]
@@ -189,7 +190,7 @@ class Lywsd02:  # pylint: disable=R0902
             func(data)
 
     @contextlib.contextmanager
-    def connect(self):  # pylint: disable=R0912
+    def connect(self) -> Generator:  # pylint: disable=R0912
         """Handle device connecting and disconnecting"""
         if self._context_depth == 0:
             if self.debug:
@@ -260,19 +261,19 @@ class Lywsd02:  # pylint: disable=R0902
                 self._peripheral.disconnect()
 
     @property
-    def battery(self) -> int:
+    def battery(self) -> float:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_BATTERY)[0]
             value = ch.read()
-        return ord(value)
+        return float(ord(value))
 
     @property
-    def data(self):
+    def data(self) -> SensorData:
         self._get_sensor_data()
         return self._data
 
     @property
-    def history_data(self):
+    def history_data(self) -> dict:
         self._get_history_data()
         return self._history_data
 
@@ -281,7 +282,7 @@ class Lywsd02:  # pylint: disable=R0902
         return self.data.humidity
 
     @property
-    def num_stored_entries(self):
+    def num_stored_entries(self) -> tuple:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_NUM_RECORDS)[0]
             value = ch.read()
@@ -293,11 +294,11 @@ class Lywsd02:  # pylint: disable=R0902
         return self.data.temperature
 
     @property
-    def history_index(self):
+    def history_index(self) -> Union[tuple, Literal[0]]:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
             value = ch.read()
-        _idx = 0 if len(value) == 0 else struct.unpack_from("I", value)
+        _idx: Union[tuple, Literal[0]] = 0 if len(value) == 0 else struct.unpack_from("I", value)
         return _idx
 
     @history_index.setter
@@ -381,13 +382,13 @@ class Lywsd03(Lywsd02):
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False):
+    def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False) -> None:
         super().__init__(
             mac=mac, notification_timeout=notification_timeout, reusable=reusable, debug=debug
         )
         self._latest_record = None
 
-    def _get_history_data(self):
+    def _get_history_data(self) -> None:
         # Work out the expected last record we'll be sent from the device.
         # The current hour doesn't appear until the end of the hour, and the time is recorded as
         # the end of hour time
@@ -434,22 +435,22 @@ class Lywsd03(Lywsd02):
         temperature /= 100
         voltage /= 1000
         # battery (float): Estimate percentage of the battery charge remaining
-        battery = round(
+        battery: float = round(
             ((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1
         )
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
         )
 
-    def output_history_progress(self, ts, min_temp, max_temp):
+    def output_history_progress(self, ts, min_temp, max_temp) -> None:
         if not self.enable_history_progress:
             return
         print(f"|-- {ts}: {min_temp} to {max_temp}")
 
     @property
-    def battery(self):
-        """Battery data comes along with the temperature and humidity data, so
-           just get it from there.
+    def battery(self) -> float:
+        """Battery percentage is calculated from voltage which comes along with the
+        temperature and humidity data, so we'll just get it from there.
 
         Returns:
              guestimate of battery percentage
@@ -457,7 +458,7 @@ class Lywsd03(Lywsd02):
         return self.data.battery
 
     @property
-    def start_time(self):
+    def start_time(self) -> datetime:
         """Work out the start time of the device.
         This is done by taking the current time, subtracting the time
         taken from the device (the run time), and adding the timezone offset.
@@ -473,7 +474,7 @@ class Lywsd03(Lywsd02):
         return self._start_time
 
     @property
-    def time(self):
+    def time(self) -> tuple[datetime, int]:
         """Fetch datetime and timezone of a LYWSD03MMC device
 
         Returns:

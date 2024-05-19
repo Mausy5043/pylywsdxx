@@ -65,7 +65,7 @@ class PyLyManager:
         self.response_list: list[float] = [self.median_response_time]
         self.radio_state_reset: float = time.time()
 
-    def subscribe_to(self, mac, dev_id="", version=3) -> None:
+    def subscribe_to(self, mac: str, dev_id: str = "", version: int = 3) -> None:
         """Let the manager subscribe to a device.
 
         Args:
@@ -184,7 +184,7 @@ class PyLyManager:
 
     def qos_device(
         self,
-        dev_id,
+        dev_id: str,
         state_of_charge: float,
         response_time: float,
         previous_q: int,
