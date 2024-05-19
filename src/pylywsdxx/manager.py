@@ -198,10 +198,13 @@ class PyLyManager:
     ) -> int:
         """Determine the device's Quality of Service."""
         if not valid:
+            # when there's no data, then there's no need to proceed
             return 0
         q = 1.0
         if excepted:
-            # in case of timeout or error in the communication we value the SoC less
+            # in case of timeout or error there is still old data
+            # so we keep that but we value the SoC less
+            # eventually this will report a QoS = 0
             q = 0.5
         LOGGER.debug(f"{dev_id} : {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
         #
