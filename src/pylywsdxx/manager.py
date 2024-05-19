@@ -175,6 +175,7 @@ class PyLyManager:
     def update_all(self) -> None:
         """Update the state of all devices known to the manager."""
         for dev, dev_state in self.device_db.items():
+            # don't bother to update devices that are on hold
             t_next: float = time.time() - dev_state["control"]["next"]
             if t_next > 0:
                 self.update(dev_id=dev)
@@ -234,6 +235,9 @@ class PyLyManager:
             if fail_score > 5:
                 # devices that keep failing are put on hold for a while
                 device_state["control"]["next"] = time.time() + (3 * 3600.0)
+                # decrease the fail_score to prevent an infinite hold
+                device_state["control"]["fail"] -= 3
+            # count number of devices that are failing
             fail_count += 1 if fail_score else 0
 
         if not fail_count:
