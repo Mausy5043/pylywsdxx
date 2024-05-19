@@ -148,7 +148,7 @@ class PyLyManager:
             self.device_db[dev_id]["state"]["battery"] = device_data.battery
         except Exception as her:  # pylint: disable=W0703
             excepted = True
-            LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501
+            LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501  # pylint: disable=C0301
 
         # record the time
         self.device_db[dev_id]["state"]["datetime"] = dt.datetime.now()
