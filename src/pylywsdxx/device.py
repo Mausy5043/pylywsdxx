@@ -160,7 +160,7 @@ class Lywsd02:  # pylint: disable=R0902
                     f"No data from device {self._mac} for {self._notification_timeout} seconds"
                 )
 
-    def _process_history_data(self, data):
+    def _process_history_data(self, data) -> None:
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
         ts = datetime.fromtimestamp(ts)
@@ -169,14 +169,14 @@ class Lywsd02:  # pylint: disable=R0902
 
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
 
-    def _process_sensor_data(self, data):
+    def _process_sensor_data(self, data) -> None:
         temperature, humidity = struct.unpack_from("hB", data)
-        temperature /= 100
+        temperature /= 100.0
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=None, voltage=None
         )
 
-    def _subscribe(self, uuid, callback):
+    def _subscribe(self, uuid, callback) -> None:
         self._peripheral.setDelegate(self)
         ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
         self._handles[ch.getHandle()] = callback
@@ -185,7 +185,7 @@ class Lywsd02:  # pylint: disable=R0902
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
     # why can't the name of this method be changed?
-    def handleNotification(self, handle, data):  # noqa
+    def handleNotification(self, handle, data) -> None:
         func = self._handles.get(handle)
         if func:
             func(data)
@@ -220,7 +220,7 @@ class Lywsd02:  # pylint: disable=R0902
             except Exception as her:
                 # Non-anticipated exceptions must be raised to draw attention to them
                 # We'll reset the radio because it has had results in the past
-                message: str = f"Unexpected exception occured for device ({self._mac})."
+                message = f"Unexpected exception occured for device ({self._mac})."
                 reraise = PyLyException(f"-- {her} --")
                 LOGGER.error(f"{message}")
                 raise reraise from her
@@ -249,7 +249,7 @@ class Lywsd02:  # pylint: disable=R0902
             # Non-anticipated exceptions must be raised to draw attention to them
             # We'll reset the radio because it has had results in the past
             # ble_reset(debug=self.debug)
-            message: str = f"Unexpected exception occured for device ({self._mac})."
+            message = f"Unexpected exception occured for device ({self._mac})."
             reraise = PyLyException(f"-- {her} --")
             LOGGER.error(f"{message}")
             raise reraise from her
@@ -262,7 +262,7 @@ class Lywsd02:  # pylint: disable=R0902
                 self._peripheral.disconnect()
 
     @property
-    def battery(self):
+    def battery(self) -> int:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_BATTERY)[0]
             value = ch.read()
@@ -410,7 +410,7 @@ class Lywsd03(Lywsd02):
                 if self._latest_record and self._latest_record >= expected_end:
                     break
 
-    def _process_history_data(self, data):
+    def _process_history_data(self, data) -> None:
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
         # Work out the time of this record by adding the record time to time the
@@ -423,7 +423,7 @@ class Lywsd03(Lywsd02):
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
         self.output_history_progress(ts, min_temp, max_temp)
 
-    def _process_sensor_data(self, data):
+    def _process_sensor_data(self, data) -> None:
         """Process the sensor data.
 
         Args:
