@@ -182,8 +182,8 @@ class PyLyManager:
             self.update(dev_id=device_to_update)
         # check radio
         fail_count = 0
-        for device_to_check in self.device_db:
-            fail_count += self.device_db[device_to_check]["control"]["fail"]
+        for _, device_state in self.device_db.items():
+            fail_count += device_state["control"]["fail"]
         if fail_count > 0:
             LOGGER.warning(f"fail count = {fail_count}")
 
