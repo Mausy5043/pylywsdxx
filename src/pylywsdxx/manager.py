@@ -48,7 +48,7 @@ class PyLyManager:
     """
 
     __INITIAL_QOS: int = 33
-    __WARNING_QOS: int = 18
+    __WARNING_QOS: int = 15
     __INITIAL_SOC: int = 50
 
     def __init__(self, debug: bool = False) -> None:
