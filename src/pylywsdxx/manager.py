@@ -234,6 +234,8 @@ class PyLyManager:
             fail_score: int = device_state["control"]["fail"]
             if fail_score > 5:
                 # devices that keep failing are put on hold for a while
+                LOGGER.warning(f"*** Putting device {device_state['state']['id']} on HOLD!")
+                LOGGER.info(device_state)
                 device_state["control"]["next"] = time.time() + (3 * 3600.0)
                 # decrease the fail_score to prevent an infinite hold
                 device_state["control"]["fail"] -= 3
