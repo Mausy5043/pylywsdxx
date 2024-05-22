@@ -210,8 +210,8 @@ class Lywsd02:  # pylint: disable=R0902
                 LOGGER.warning(f"{message}")
                 # Try to disconnect to avoid stale connections causing BTLEConnectError later.
                 if self.debug:
-                    print(f"|-< Disconnecting from {self._mac}")
-                    LOGGER.debug(f"|-< Disconnecting from {self._mac}")
+                    print(f"|-< Disconnecting from {self._mac}  (forced_1)")
+                    LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_1)")
                 try:
                     self._peripheral.disconnect()
                 except Exception as her2:  # pylint: disable=broad-exception-caught
@@ -224,8 +224,8 @@ class Lywsd02:  # pylint: disable=R0902
                 LOGGER.error(f"{message}")
                 # Try to disconnect to avoid stale connections causing BTLEConnectError later.
                 if self.debug:
-                    print(f"|-< Disconnecting from {self._mac}")
-                    LOGGER.debug(f"|-< Disconnecting from {self._mac}")
+                    print(f"|-< Disconnecting from {self._mac}  (forced_unk)")
+                    LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_unk)")
                 try:
                     self._peripheral.disconnect()
                 except Exception as her2:  # pylint: disable=broad-exception-caught
@@ -264,8 +264,8 @@ class Lywsd02:  # pylint: disable=R0902
             self._context_depth -= 1
             if self._context_depth == 0:
                 if self.debug:
-                    print(f"|-< Disconnecting from {self._mac}")
-                    LOGGER.debug(f"|-< Disconnecting from {self._mac}")
+                    print(f"|-< Disconnecting from {self._mac} (final)")
+                    LOGGER.debug(f"|-< Disconnecting from {self._mac} (final)")
                 self._peripheral.disconnect()
 
     @property
