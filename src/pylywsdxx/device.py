@@ -208,6 +208,14 @@ class Lywsd02:  # pylint: disable=R0902
                     message = f"Device ({self._mac}) timed out on connect."
                     reraise = PyLyTimeout(f"-- {her} --")
                 LOGGER.warning(f"{message}")
+                # Try to disconnect to avoid stale connections causing BTLEConnectError later.
+                if self.debug:
+                    print(f"|-< Disconnecting from {self._mac}")
+                    LOGGER.debug(f"|-< Disconnecting from {self._mac}")
+                try:
+                    self._peripheral.disconnect()
+                except Exception as her2:
+                    LOGGER.error(f"While disconnecting : {her2}")
                 raise reraise from her
             except Exception as her:
                 # Non-anticipated exceptions must be raised to draw attention to them
