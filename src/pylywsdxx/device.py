@@ -176,7 +176,7 @@ class Lywsd02:  # pylint: disable=R0902
         )
 
     def _subscribe(self, uuid, callback) -> None:
-        self._peripheral.setDelegate(self)  # type: ignore[no-untyped-call]
+        self._peripheral.setDelegate(self)
         ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
         self._handles[ch.getHandle()] = callback
         desc = ch.getDescriptors(forUUID=0x2902)[0]
@@ -214,7 +214,7 @@ class Lywsd02:  # pylint: disable=R0902
                     LOGGER.debug(f"|-< Disconnecting from {self._mac}")
                 try:
                     self._peripheral.disconnect()
-                except Exception as her2:
+                except Exception as her2:  # pylint: disable=broad-exception-caught
                     LOGGER.error(f"While disconnecting : {her2}")
                 raise reraise from her
             except Exception as her:
@@ -228,7 +228,7 @@ class Lywsd02:  # pylint: disable=R0902
                     LOGGER.debug(f"|-< Disconnecting from {self._mac}")
                 try:
                     self._peripheral.disconnect()
-                except Exception as her2:
+                except Exception as her2:  # pylint: disable=broad-exception-caught
                     LOGGER.error(f"While disconnecting : {her2}")
                 raise reraise from her
 
