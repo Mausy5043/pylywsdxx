@@ -22,7 +22,7 @@ The dict `state` is returned to the client. The rest is for internal use.
 {
     "state": {
         "mac": mac,             # MAC address provided by the client
-        "id": dev_id,           # (optional) device id provided by the client for easier identification
+        "dev_id": dev_id,           # (optional) device id provided by the client for easier identification
         "quality": 100,         # (int) 0...100, expresses the devices QoS
         "temperature": degC,    # (float) latest temperature
         "humidity": percent,    # (int) latest humidity
@@ -234,7 +234,7 @@ class PyLyManager:
             fail_score: int = device_state["control"]["fail"]
             if fail_score > 5:
                 # devices that keep failing are put on hold for a while
-                LOGGER.warning(f"*** Putting device {device_state['state']['id']} on HOLD!")
+                LOGGER.warning(f"*** Putting device {device_state['state']['dev_id']} on HOLD!")
                 LOGGER.info(device_state)
                 device_state["control"]["next"] = time.time() + (3 * 3600.0)
                 # decrease the fail_score to prevent an infinite hold
