@@ -221,7 +221,7 @@ class Lywsd02:  # pylint: disable=R0902
                 try:
                     self._peripheral.disconnect()
                 except Exception as her2:
-                    LOGGER.error(f"While disconnecting : {her}")
+                    LOGGER.error(f"While disconnecting : {her2}")
                 raise reraise from her
 
         self._context_depth += 1
