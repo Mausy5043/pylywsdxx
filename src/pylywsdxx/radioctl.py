@@ -19,6 +19,12 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
         debug (bool): whether to provide debugging information.
 
     """
+    args: list[str] = ["/usr/bin/bluetoothctl", "devices"]
+    _devices: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
+    if debug:
+        print(f"Known devices: {_devices}")
+    LOGGER.info(f"Known devices: {_devices}")
+
     if debug:
         LOGGER.level = logging.DEBUG
     LOGGER.warning("Resetting BT-radio.")
@@ -28,16 +34,17 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
     _exit_code_on: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
     if debug:
         print(f"Radio off ({_exit_code_on})")
-        LOGGER.error(f"Radio off ({_exit_code_on})")
+    LOGGER.info(f"Radio off ({_exit_code_on})")
 
     time.sleep(delay)
     args = ["/usr/bin/bluetoothctl", "power", "on"]
     _exit_code_off: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
     if debug:
         print(f"Radio on ({_exit_code_off})")
-        LOGGER.error(f"Radio on ({_exit_code_off})")
+    LOGGER.info(f"Radio on ({_exit_code_off})")
 
     # if all else fails...
-    # os.system("/usr/bin/sudo /usr/bin/systemctl restart bluetooth.service")
-    return _exit_code_on, _exit_code_off
+    # args = ["/usr/bin/sudo", "/usr/bin/systemctl", "restart", "bluetooth.service"]
+    # restart_result: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
+    return (_exit_code_on, _exit_code_off)
 # fmt: on
