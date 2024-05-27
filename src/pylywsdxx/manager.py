@@ -166,7 +166,7 @@ class PyLyManager:
         # check if device is failing (i.e. exception or low QoS)
         if excepted or self.device_db[dev_id]["state"]["quality"] < 6:
             self.device_db[dev_id]["control"]["fail"] += 1
-            LOGGER.warning(f"{dev_id} : fail score: {self.device_db[dev_id]['control']['fail']}")
+            LOGGER.info(f"{dev_id} : fail score: {self.device_db[dev_id]['control']['fail']}")
         else:
             _fail: int = self.device_db[dev_id]["control"]["fail"]
             self.device_db[dev_id]["control"]["fail"] = max([0, _fail - 1])
@@ -218,7 +218,7 @@ class PyLyManager:
         new_q: float = stat.mean([prev_q, soc * rt * q])
         msg = f"{dev_id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
         if new_q < (self.__WARNING_QOS / 100.0):
-            LOGGER.warning(msg)
+            LOGGER.info(msg)
         else:
             LOGGER.debug(msg)
 
@@ -250,12 +250,12 @@ class PyLyManager:
         dev_cnt: int = len(self.device_db)
         rst_time: float = time.time() - self.radio_state_reset
         if fail_count > int(dev_cnt / 2) and rst_time >= 0:
-            LOGGER.error(msg)
+            LOGGER.warning(msg)
             ble_reset()
             # prevent repeated resets of the radio
             self.radio_state_reset = time.time() + 3600.0
             return
 
         if fail_count > 0:
-            LOGGER.warning(msg)
+            LOGGER.info(msg)
             return

@@ -13,7 +13,7 @@ from .manager import PyLyManager
 from .radioctl import ble_reset
 
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.INFO,
     format="pylywsd.%(module)s.%(funcName)s [%(levelname)s] - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[
