@@ -102,7 +102,7 @@ class Lywsd02:  # pylint: disable=R0902
         """
         self.debug: bool = debug
         if debug:
-            if not len(LOGGER.handlers):
+            if len(LOGGER.handlers) == 0:
                 LOGGER.addHandler(logging.StreamHandler(sys.stdout))
             LOGGER.level = logging.DEBUG
         self.reusable: bool = reusable
