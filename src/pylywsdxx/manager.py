@@ -2,11 +2,11 @@
 
 import datetime as dt
 import logging
-
+import statistics as stat
+import sys
 import time
 
 # from threading import Timer
-import statistics as stat
 from typing import Any
 
 from .device import Lywsd02
@@ -57,6 +57,7 @@ class PyLyManager:
         self.device_db: dict[str, dict[str, Any]] = {}
         self.mgr_debug: bool = debug
         if debug:
+            LOGGER.addHandler(logging.StreamHandler(sys.stdout))
             LOGGER.level = logging.DEBUG
             LOGGER.debug("Debugging on.")
         self.mgr_notification_timeout: float = 11.5
@@ -135,9 +136,10 @@ class PyLyManager:
         _t0: float = time.time()
         excepted = False
         valid_data = False
+        _device = self.device_db[dev_id]["object"]
         # fmt: off
         try:
-            device_data: Any = self.device_db[dev_id]["object"].data
+            device_data: Any = _device.data
             self.device_db[dev_id]["state"]["temperature"] = device_data.temperature
             self.device_db[dev_id]["state"]["humidity"] = device_data.humidity
             self.device_db[dev_id]["state"]["voltage"] = device_data.voltage

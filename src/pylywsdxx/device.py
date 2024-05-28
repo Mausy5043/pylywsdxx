@@ -4,6 +4,7 @@ import collections
 import contextlib
 import logging
 import struct
+import sys
 import time
 from typing import Generator, Literal, Union
 
@@ -81,9 +82,6 @@ class Lywsd02:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    _MAX_TRIES = 3
-    _MAX_RESETS = 1
-
     def __init__(
         self,
         mac: str,
@@ -104,6 +102,8 @@ class Lywsd02:  # pylint: disable=R0902
         """
         self.debug: bool = debug
         if debug:
+            if not len(LOGGER.handlers):
+                LOGGER.addHandler(logging.StreamHandler(sys.stdout))
             LOGGER.level = logging.DEBUG
         self.reusable: bool = reusable
         btle.Debugging = self.debug
@@ -117,44 +117,20 @@ class Lywsd02:  # pylint: disable=R0902
         self._history_data = collections.OrderedDict()  # type: ignore
         self._context_depth: int = 0
 
-        # define the number of times a device must cause an error before countermeasures are taken
-        self._set_tries()
-        # define the number of times a device may cause a countermeasure before we give up
-        # and raise an error
-        self._set_resets()
-
-    def _set_tries(self) -> None:
-        """Initialise a retry counter"""
-        self._tries: int = self._MAX_TRIES if self.reusable else 1
-
-    def _set_resets(self) -> None:
-        """Initialise a reset counter"""
-        self._resets = self._MAX_RESETS
-
-    def _tr_msg(self) -> str:
-        return (
-            f"T{self._MAX_TRIES - self._tries}/{self._MAX_TRIES}:"
-            f"R{self._MAX_RESETS - self._resets}/{self._MAX_RESETS}"
-        )
-
     def _get_history_data(self) -> None:
         with self.connect():
             self._subscribe(UUID_HISTORY, self._process_history_data)
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    if self.debug:
-                        print(f"|-- Timeout waiting for {self._mac}")
+                    LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
                     break
 
     def _get_sensor_data(self) -> None:
         with self.connect():
             self._subscribe(UUID_DATA, self._process_sensor_data)
-
             if not self._peripheral.waitForNotifications(self._notification_timeout):
-                if self.debug:
-                    print(f"|-- Timeout waiting for {self._mac}")
-                    LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
+                LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
                 raise PyLyTimeout(
                     f"No data from device {self._mac} for {self._notification_timeout} seconds"
                 )
@@ -193,9 +169,7 @@ class Lywsd02:  # pylint: disable=R0902
     def connect(self) -> Generator:  # pylint: disable=R0912
         """Handle device connecting and disconnecting"""
         if self._context_depth == 0:
-            if self.debug:
-                print(f"|-> Connecting to {self._mac}")
-                LOGGER.debug(f"|-> Connecting to {self._mac}")
+            LOGGER.debug(f"|-> Connecting to {self._mac}")
             try:
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
             except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
@@ -210,9 +184,7 @@ class Lywsd02:  # pylint: disable=R0902
                     reraise = PyLyTimeout(f"-- {her} --")
                 LOGGER.warning(f"{message}")
                 # Try to disconnect to avoid stale connections causing BTLEConnectError later.
-                if self.debug:
-                    print(f"|-< Disconnecting from {self._mac}  (forced_1)")
-                    LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_1)")
+                LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_1)")
                 try:
                     self._peripheral.disconnect()
                 except Exception as her2:  # pylint: disable=broad-exception-caught
@@ -224,8 +196,7 @@ class Lywsd02:  # pylint: disable=R0902
                 reraise = PyLyException(f"-- {her} --")
                 LOGGER.error(f"{message}")
                 # Try to disconnect to avoid stale connections causing BTLEConnectError later.
-                if self.debug:
-                    print(f"|-< Disconnecting from {self._mac}  (forced_unk)")
+                LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_unk)")
                 try:
                     LOGGER.warning(f"*** Disconnecting from {self._mac}  (forced_unk)")
                     self._peripheral.disconnect()
@@ -264,9 +235,7 @@ class Lywsd02:  # pylint: disable=R0902
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
-                if self.debug:
-                    print(f"|-< Disconnecting from {self._mac} (final)")
-                    LOGGER.debug(f"|-< Disconnecting from {self._mac} (final)")
+                LOGGER.debug(f"|-< Disconnecting from {self._mac} (final)")
                 self._peripheral.disconnect()
 
     @property
@@ -409,8 +378,7 @@ class Lywsd03(Lywsd02):
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    if self.debug:
-                        print(f"|-- Timeout listening to {self._mac}")
+                    LOGGER.debug(f"|-- Timeout listening to {self._mac}")
                     break
 
                 # Find the last date we have data for, and check if it's for the current hour
