@@ -196,12 +196,12 @@ class PyLyManager:
         if not valid:
             # when there's no data, then there's no need to proceed
             return 0
-        q = 1.0
+        q: float = 1.0
         if excepted:
-            # in case of timeout or error there is still old data
+            # In case of timeout or error there is still old data
             # so we keep that but we value the SoC less
-            # eventually this will report a QoS = 0
-            q = 0.5
+            # eventually this will report a QoS approaching 0
+            q = pow(self.__WARNING_QOS, 0.5)
         LOGGER.debug(f"{dev_id} : {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
         #
         self.response_list.append(response_time)
@@ -210,12 +210,16 @@ class PyLyManager:
         self.median_response_time = stat.median(self.response_list)
         LOGGER.debug(f"{dev_id} median RT : {self.median_response_time}")
 
-        # normalise parameters
+        # Normalise parameters
         soc: float = state_of_charge / 100.0
         rt: float = min(1.0, self.median_response_time / response_time)
         prev_q: float = previous_q / 100.0
         # Determine QoS and log message to report QoS
         new_q: float = stat.mean([prev_q, soc * rt * q])
+        # Devices with a QoS less or equal to 3% will report QoS=0%
+        # The stat.mean() would otherwise take too long to drop to 0
+        if new_q <= 0.03:
+            new_q = 0.0
         msg = f"{dev_id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
         if new_q < (self.__WARNING_QOS / 100.0):
             LOGGER.info(msg)
