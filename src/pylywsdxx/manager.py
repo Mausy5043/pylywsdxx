@@ -249,7 +249,7 @@ class PyLyManager:
         msg: str = f"fail count = {fail_count}"
         dev_cnt: int = len(self.device_db)
         rst_time: float = time.time() - self.radio_state_reset
-        if fail_count > int(dev_cnt / 2) and rst_time >= 0:
+        if fail_count >= int(dev_cnt / 2) and rst_time >= 0:
             LOGGER.warning(msg)
             ble_reset()
             # prevent repeated resets of the radio
