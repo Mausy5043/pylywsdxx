@@ -201,6 +201,7 @@ class Lywsd02:  # pylint: disable=R0902
             except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
                 message: str = ""
                 reraise = PyLyException(f"-- {her} --")
+                # set appropriate error message
                 if isinstance(her, btle.BTLEConnectError):
                     message = f"Device ({self._mac}) connection failed."
                     reraise = PyLyConnectError(f"-- {her} --")
