@@ -2,6 +2,7 @@
 
 import logging
 import subprocess  # nosec B404
+import sys
 import time
 
 # import warnings
@@ -19,6 +20,7 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
         debug (bool): whether to provide debugging information.
     """
     if debug:
+        LOGGER.addHandler(logging.StreamHandler(sys.stdout))
         LOGGER.level = logging.DEBUG
 
     # fetch state of devices from bluetoothctl
