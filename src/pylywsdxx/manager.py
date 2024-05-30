@@ -203,7 +203,7 @@ class PyLyManager:
             # In case of timeout or error there is still old data
             # so we keep that but we value the SoC less
             # eventually this will report a QoS approaching 0
-            q = pow(self.__WARNING_QOS, 0.5)
+            q = pow(self.__WARNING_QOS / 100, 0.5)
         LOGGER.debug(f"{dev_id} : {state_of_charge}% {response_time:.1f}s {previous_q} {q}")
         #
         self.response_list.append(response_time)
@@ -217,13 +217,17 @@ class PyLyManager:
         rt: float = min(1.0, self.median_response_time / response_time)
         prev_q: float = previous_q / 100.0
         # Determine QoS and log message to report QoS
-        new_q: float = stat.mean([prev_q, soc * rt * q])
-        # Devices with a QoS less or equal to 3% will report QoS=0%
+        new_q: float = min(stat.mean([prev_q, soc * rt * q]), 1.0)
+        # Devices with a QoS less or equal to 1/3 of warning level will report QoS=0%
         # The stat.mean() would otherwise take too long to drop to 0
-        if new_q <= 0.03:
+        if new_q <= (self.__WARNING_QOS /100.0) / 3:  # was 0.03:
             new_q = 0.0
-        msg = f"{dev_id} : q({q:.1f}) * soc({soc:.4f}) * rt({rt:.4f}) :: prev_qos({prev_q}) => QoS({new_q:.4f})"
-        if new_q < (self.__WARNING_QOS / 100.0):
+        msg = (
+            f"{dev_id} : q({q:.1f}) * soc({soc:.2f}) * rt({rt:.4f} "
+            f"| {self.median_response_time:.1f}s) :: prev_qos({prev_q:.2f}) "
+            f"=> QoS({new_q:.4f})"
+        )
+        if new_q < (self.__WARNING_QOS / 100.0) or excepted:
             LOGGER.info(msg)
         else:
             LOGGER.debug(msg)
