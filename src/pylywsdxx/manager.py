@@ -220,7 +220,7 @@ class PyLyManager:
         new_q: float = min(stat.mean([prev_q, soc * rt * q]), 1.0)
         # Devices with a QoS less or equal to 1/3 of warning level will report QoS=0%
         # The stat.mean() would otherwise take too long to drop to 0
-        if new_q <= (self.__WARNING_QOS /100.0) / 3:  # was 0.03:
+        if new_q <= 0.06:  # was 0.03:
             new_q = 0.0
         msg = (
             f"{dev_id} : q({q:.1f}) * soc({soc:.2f}) * rt({rt:.4f} "
