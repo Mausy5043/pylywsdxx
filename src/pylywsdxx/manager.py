@@ -50,6 +50,8 @@ class PyLyManager:
     __INITIAL_QOS: int = 33
     __WARNING_QOS: int = 15
     __INITIAL_SOC: int = 50
+    __HOLD_FAILS: int = 3
+    __HOLD_DURATION: float = 3 * 3600.      # seconds
 
     def __init__(self, debug: bool = False) -> None:
         """Initialise the manager."""
@@ -242,13 +244,13 @@ class PyLyManager:
         fail_count = 0
         for _, device_state in self.device_db.items():
             fail_score: int = device_state["control"]["fail"]
-            if fail_score > 5:
+            if fail_score >= self.__HOLD_FAILS:
                 # devices that keep failing are put on hold for a while
                 LOGGER.warning(f"*** Putting device {device_state['state']['dev_id']} on HOLD!")
                 LOGGER.info(device_state)
-                device_state["control"]["next"] = time.time() + (3 * 3600.0)
+                device_state["control"]["next"] = time.time() + (self.__HOLD_DURATION)
                 # decrease the fail_score to prevent an infinite hold
-                device_state["control"]["fail"] -= 3
+                device_state["control"]["fail"] -= 2
             # count number of devices that are failing
             fail_count += 1 if fail_score else 0
 
