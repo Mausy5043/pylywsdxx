@@ -169,6 +169,7 @@ class PyLyManager:
         )
         # check if device is failing (i.e. exception or low QoS)
         if excepted or self.device_db[dev_id]["state"]["quality"] < 6:
+            self.device_db[dev_id]["state"]["battery"] /= 2
             self.device_db[dev_id]["control"]["fail"] += 1
             LOGGER.info(f"{dev_id} : fail score: {self.device_db[dev_id]['control']['fail']}")
         else:
@@ -244,6 +245,7 @@ class PyLyManager:
         fail_count = 0
         for _, device_state in self.device_db.items():
             fail_score: int = device_state["control"]["fail"]
+            # soc = device_state["state"]["battery"]
             if fail_score >= self.__HOLD_FAILS:
                 # devices that keep failing are put on hold for a while
                 LOGGER.warning(f"*** Putting device {device_state['state']['dev_id']} on HOLD!")

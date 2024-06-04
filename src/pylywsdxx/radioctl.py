@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import re
 import subprocess  # nosec B404
 import sys
 import time
@@ -34,23 +35,33 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
 
     # Have you tried turning it off and on again?
     args = ["/usr/bin/bluetoothctl", "power", "off"]
-    _exit_code_on: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
+    _exit_code_off: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
     if debug:
-        print(f"Radio off ({_exit_code_on})")
-    LOGGER.info(f"Radio off ({_exit_code_on})")
+        print(f"Radio off : {_exit_code_off}")
+    LOGGER.info(f"Radio off : {de_escape_string(_exit_code_off)}")
     time.sleep(delay)
+
     args = ["/usr/bin/bluetoothctl", "power", "on"]
-    _exit_code_off: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
+    _exit_code_on: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
     if debug:
-        print(f"Radio on ({_exit_code_off})")
-    LOGGER.info(f"Radio on ({_exit_code_off})")
+        print(f"Radio on : {_exit_code_on}")
+    LOGGER.info(f"Radio on : {de_escape_string(_exit_code_on)}")
+    time.sleep(delay)
 
     # if all else fails...
     args = ["/usr/bin/sudo", "/usr/bin/systemctl", "restart", "bluetooth.service"]
-    _restart_result: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8")  # nosec B603
+    _restart_result: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
     if debug:
         print(f"Restarted bluetooth service ({_restart_result}")
     LOGGER.info(f"Restarted bluetooth service ({_restart_result}")
-
+    time.sleep(delay)
     return (_exit_code_on, _exit_code_off)
 # fmt: on
+
+def de_escape_string(text: str) -> str:
+    """Remove ANSI escape sequences using regular expression"""
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    cleaned_text: str = ansi_escape.sub('', text)
+    # Remove any remaining \x01 and \x02 characters
+    cleaned_text = cleaned_text.replace('\x01', '').replace('\x02', '')
+    return cleaned_text
