@@ -157,6 +157,10 @@ class PyLyManager:
         state_of_charge: float = self.device_db[dev_id]["state"]["battery"]
         previous_qos: int = self.device_db[dev_id]["state"]["quality"]
         response_time: float = time.time() - _t0
+        if response_time < 0.0:
+            # sometimes the update coincides with NTP synchronisation.
+            # if the clock then jumps backwards response_time will be negative.
+            response_time = self.median_response_time
         # fmt: on
 
         # check if we have some data, so the client won't have to bork
