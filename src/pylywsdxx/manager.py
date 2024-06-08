@@ -11,8 +11,9 @@ from typing import Any
 
 from .device import Lywsd02
 from .device import Lywsd03
+from .device import PyLyTimeout  # PyLyConnectError,
 
-from .radioctl import ble_reset
+from .radioctl import ble_reset, force_disconnect
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -146,6 +147,11 @@ class PyLyManager:
             self.device_db[dev_id]["state"]["humidity"] = device_data.humidity
             self.device_db[dev_id]["state"]["voltage"] = device_data.voltage
             self.device_db[dev_id]["state"]["battery"] = device_data.battery
+        except PyLyTimeout as her:  # pylint: disable=W0703
+            excepted = True
+            LOGGER.error(f"*** While talking to room {dev_id}, device {self.device_db[dev_id]['state']['mac']} timed out.")   # noqa: E501  # pylint: disable=C0301
+            # Device did not disconnect properly
+            force_disconnect(self.device_db[dev_id]['state']['mac'])
         except Exception as her:  # pylint: disable=W0703
             excepted = True
             LOGGER.error(f"*** While talking to room {dev_id} ({self.device_db[dev_id]['state']['mac']}) {type(her).__name__} {her} ")   # noqa: E501  # pylint: disable=C0301
@@ -167,13 +173,18 @@ class PyLyManager:
         if "temperature" in self.device_db[dev_id]["state"]:
             valid_data = True
 
+        # check if device is failing
+        if excepted:
+            # battery level is unreliable so we adjust it downwards to force action
+            self.device_db[dev_id]["state"]["battery"] /= 2
+
         # determine the device's QoS
         self.device_db[dev_id]["state"]["quality"] = self.qos_device(
             dev_id, state_of_charge, response_time, previous_qos, excepted, valid_data
         )
+
         # check if device is failing (i.e. exception or low QoS)
         if excepted or self.device_db[dev_id]["state"]["quality"] < 6:
-            self.device_db[dev_id]["state"]["battery"] /= 2
             self.device_db[dev_id]["control"]["fail"] += 1
             LOGGER.info(f"{dev_id} : fail score: {self.device_db[dev_id]['control']['fail']}")
         else:

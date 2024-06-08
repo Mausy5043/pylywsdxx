@@ -65,3 +65,10 @@ def de_escape_string(text: str) -> str:
     # Remove any remaining \x01 and \x02 characters
     cleaned_text = cleaned_text.replace('\x01', '').replace('\x02', '')
     return cleaned_text
+
+def force_disconnect(device: str) -> None:
+    """Name of the function says it all."""
+    args: list[str] = ["/usr/bin/bluetoothctl", "disconnect", f"{device}"]
+    _result: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
+    LOGGER.error(f"Forced disconnect on device {device}")
+    LOGGER.info(f"{de_escape_string(_result)}")
