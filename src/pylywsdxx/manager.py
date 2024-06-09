@@ -11,7 +11,7 @@ from typing import Any
 
 from .device import Lywsd02
 from .device import Lywsd03
-from .device import PyLyTimeout  # PyLyConnectError,
+from .device import PyLyConnectError, PyLyTimeout
 
 from .radioctl import ble_reset, force_disconnect
 
@@ -149,7 +149,12 @@ class PyLyManager:
             self.device_db[dev_id]["state"]["battery"] = device_data.battery
         except PyLyTimeout as her:  # pylint: disable=W0703
             excepted = True
-            LOGGER.error(f"*** While talking to room {dev_id}, device {self.device_db[dev_id]['state']['mac']} timed out.")   # noqa: E501  # pylint: disable=C0301
+            LOGGER.warning(f"*** While talking to room {dev_id}, device {self.device_db[dev_id]['state']['mac']} timed out.")   # noqa: E501  # pylint: disable=C0301
+            # Device did not disconnect properly
+            force_disconnect(self.device_db[dev_id]['state']['mac'])
+        except PyLyConnectError as her:  # pylint: disable=W0703
+            excepted = True
+            LOGGER.error(f"*** While connecting to room {dev_id}, could not connect to device {self.device_db[dev_id]['state']['mac']}.")   # noqa: E501  # pylint: disable=C0301
             # Device did not disconnect properly
             force_disconnect(self.device_db[dev_id]['state']['mac'])
         except Exception as her:  # pylint: disable=W0703
