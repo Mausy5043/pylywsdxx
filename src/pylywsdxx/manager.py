@@ -52,7 +52,7 @@ class PyLyManager:
     __WARNING_QOS: int = 15
     __INITIAL_SOC: int = 50
     __HOLD_FAILS: int = 3
-    __HOLD_DURATION: float = 3 * 3600.      # seconds
+    __HOLD_DURATION: float = 3 * 3600.0  # seconds
 
     def __init__(self, debug: bool = False) -> None:
         """Initialise the manager."""
