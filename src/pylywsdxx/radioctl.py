@@ -80,5 +80,5 @@ def force_disconnect(device: str) -> None:
         LOGGER.info(f"{de_escape_string(_result)}")
     except subprocess.CalledProcessError as her:
         # ignore if disconnect was unsuccesful, but log the error.
-        _resultb: bytes= her.output
-        LOGGER.warning(f"{_resultb.decode(encoding="utf-8").strip()}")
+        _resultb: bytes = her.output
+        LOGGER.warning(f"{_resultb.decode(encoding='utf-8').strip()}")
