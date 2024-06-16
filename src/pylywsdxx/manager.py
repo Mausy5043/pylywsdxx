@@ -54,7 +54,7 @@ class PyLyManager:
     __HOLD_FAILS: int = 3
     __HOLD_DURATION: float = 3 * 3600.0  # seconds
 
-    def __init__(self, debug: bool = False) -> None:
+    def __init__(self, reset_hardware: bool = False, debug: bool = False) -> None:
         """Initialise the manager."""
         LOGGER.info("Initialising pylywsdxx device manager.")
         self.device_db: dict[str, dict[str, Any]] = {}
@@ -63,6 +63,8 @@ class PyLyManager:
             LOGGER.addHandler(logging.StreamHandler(sys.stdout))
             LOGGER.level = logging.DEBUG
             LOGGER.debug("Debugging on.")
+        if reset_hardware:
+            ble_reset()
         self.mgr_notification_timeout: float = 11.5
         self.mgr_reusable: bool = False
         self.median_response_time: float = 11.5
