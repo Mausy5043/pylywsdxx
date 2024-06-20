@@ -37,23 +37,23 @@ def ble_reset(delay: float = 20.0, debug: bool = False) -> tuple[str, str]:
     args = ["/usr/bin/bluetoothctl", "power", "off"]
     _exit_code_off: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
     if debug:
-        print(f"Radio off : {_exit_code_off}")
-    LOGGER.info(f"Radio off : {de_escape_string(_exit_code_off)}")
+        print(f"Radio off : \n{_exit_code_off}")
+    LOGGER.info(f"Radio off : \n{de_escape_string(_exit_code_off)}")
     time.sleep(delay)
 
     args = ["/usr/bin/bluetoothctl", "power", "on"]
     _exit_code_on: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
     if debug:
-        print(f"Radio on : {_exit_code_on}")
-    LOGGER.info(f"Radio on : {de_escape_string(_exit_code_on)}")
+        print(f"Radio on : \n{_exit_code_on}")
+    LOGGER.info(f"Radio on : \n{de_escape_string(_exit_code_on)}")
     time.sleep(delay)
 
     # if all else fails...
     args = ["/usr/bin/sudo", "/usr/bin/systemctl", "restart", "bluetooth.service"]
     _restart_result: str = subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()  # nosec B603
     if debug:
-        print(f"Restarted bluetooth service ({_restart_result}")
-    LOGGER.info(f"Restarted bluetooth service ({_restart_result}")
+        print(f"Restarted bluetooth service \n({_restart_result})")
+    LOGGER.info(f"Restarted bluetooth service \n({_restart_result})")
     time.sleep(delay)
     return (_exit_code_on, _exit_code_off)
 # fmt: on
