@@ -24,7 +24,7 @@ logging.basicConfig(
 )
 LOGGER: logging.Logger = logging.getLogger(__name__)
 
-__all__ = (
+__all__: tuple = (
     "Lywsd02",
     "Lywsd03",
     "PyLyException",
