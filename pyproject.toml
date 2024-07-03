@@ -9,7 +9,7 @@ build-backend = "hatchling.build"
 name = "pylywsdxx"
 description = "A Python3 class to interrogate Xiaomi Mijia LYWSD* sensors."
 #version = "1.12.1"  # latest/current distribution version
-version = "2.1.75"  # latest test version
+version = "2.1.78"  # latest test version
 dependencies = [
     "bluepy3",
 ]
@@ -34,3 +34,9 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/Mausy5043/pylywsdxx"
 "Bug Tracker" = "https://github.com/Mausy5043/pylywsdxx/issues"
+
+[tool.hatch.build]
+include = [
+    "pylywsdxx/*.py",
+    "pylywsdxx/py.typed",
+]
