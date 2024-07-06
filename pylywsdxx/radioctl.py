@@ -71,10 +71,10 @@ def de_escape_string(text: str) -> str:
 def force_disconnect(device: str) -> None:
     """Name of the function says it all."""
     args: list[str] = ["/usr/bin/bluetoothctl", "disconnect", f"{device}"]
-    _result = ":-D"
+    _result: str = ":-D"
     LOGGER.error(f"Forcing disconnect from device {device}")
     try:
-        _result: str = (
+        _result = (
             subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()
         )  # nosec B603
         LOGGER.info(f"{de_escape_string(_result)}")
