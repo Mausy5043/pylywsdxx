@@ -7,7 +7,7 @@ import sys
 import time
 
 # from threading import Timer
-from typing import Any
+from typing import Any, Self
 
 from .device import Lywsd02
 from .device import Lywsd03
@@ -70,6 +70,17 @@ class PyLyManager:
         self.median_response_time: float = 11.5
         self.response_list: list[float] = [self.median_response_time]
         self.radio_state_reset: float = time.time()
+
+    def __enter__(self) -> Self:
+        """future: Support for context management.
+        Do stuff to start up the manager."""
+        LOGGER.debug("__enter__")
+        return self
+
+    def __exit__(self, exc_type=None, exc_value=None, traceback=None) -> None:
+        """future: Support for context management.
+        Do stuff to clean up after using the manager."""
+        LOGGER.debug("__exit__")
 
     def subscribe_to(self, mac: str, dev_id: str = "", version: int = 3) -> None:
         """Let the manager subscribe to a device.
