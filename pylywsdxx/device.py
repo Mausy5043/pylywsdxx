@@ -2,14 +2,16 @@
 
 import collections
 import contextlib
+import logging
 import struct
+import sys
 import time
-import warnings
+from typing import Generator, Literal, Union
+
+# import warnings
 from datetime import datetime, timedelta
 
-from bluepy3 import btle  # noqa
-
-from .radioctl import ble_reset
+from bluepy3 import btle
 
 UUID_UNITS = "EBE0CCBE-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _       0x00 - F, 0x01 - C    READ WRITE
 UUID_HISTORY = "EBE0CCBC-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     Last idx 152          READ NOTIFY
@@ -20,17 +22,19 @@ UUID_BATTERY = "EBE0CCC4-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _     1 byte           
 UUID_NUM_RECORDS = "EBE0CCB9-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _ 8 bytes               READ
 UUID_RECORD_IDX = "EBE0CCBA-7A0A-4B0C-8A1A-6FF2997DA3A6"  # _  4 bytes               READ WRITE
 
-warnings.filterwarnings(action="always", category=RuntimeWarning)
+# warnings.filterwarnings(action="always", category=RuntimeWarning)
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class PyLyException(Exception):
     """Base class for all pylywsdxx exceptions."""
 
     def __init__(self, message: str):
-        self.message = message
+        self.message: str = message
 
-    def __str__(self):
-        msg = f"(pylywsdxx) {self.message}"
+    def __str__(self) -> str:
+        msg: str = f"(pylywsdxx) {self.message}"
         return msg
 
 
@@ -78,9 +82,6 @@ class Lywsd02:  # pylint: disable=R0902
         "F": b"\x01",
     }
 
-    _MAX_TRIES = 6
-    _MAX_RESETS = 3
-
     def __init__(
         self,
         mac: str,
@@ -100,6 +101,10 @@ class Lywsd02:  # pylint: disable=R0902
             debug: whether to provide debugging info output.
         """
         self.debug: bool = debug
+        if debug:
+            if len(LOGGER.handlers) == 0:
+                LOGGER.addHandler(logging.StreamHandler(sys.stdout))
+            LOGGER.level = logging.DEBUG
         self.reusable: bool = reusable
         btle.Debugging = self.debug
         self._mac: str = mac
@@ -109,28 +114,8 @@ class Lywsd02:  # pylint: disable=R0902
         # self._tz_offset: int = self.tz_offset  # does not work
         self._tz_offset = None
         self._data = SensorData(None, None, None, None)
-        self._history_data: collections.OrderedDict = collections.OrderedDict()
+        self._history_data = collections.OrderedDict()  # type: ignore
         self._context_depth: int = 0
-
-        # define the number of times a device must cause an error before countermeasures are taken
-        self._set_tries()
-        # define the number of times a device may cause a countermeasure before we give up
-        # and raise an error
-        self._set_resets()
-
-    def _set_tries(self) -> None:
-        """Initialise a retry counter"""
-        self._tries = self._MAX_TRIES if self.reusable else 1
-
-    def _set_resets(self) -> None:
-        """Initialise a reset counter"""
-        self._resets = self._MAX_RESETS
-
-    def _tr_msg(self) -> str:
-        return (
-            f"T{self._MAX_TRIES - self._tries}/{self._MAX_TRIES}:"
-            f"R{self._MAX_RESETS - self._resets}/{self._MAX_RESETS}"
-        )
 
     def _get_history_data(self) -> None:
         with self.connect():
@@ -138,22 +123,19 @@ class Lywsd02:  # pylint: disable=R0902
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    if self.debug:
-                        print(f"|-- Timeout waiting for {self._mac}")
+                    LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
                     break
 
     def _get_sensor_data(self) -> None:
         with self.connect():
             self._subscribe(UUID_DATA, self._process_sensor_data)
-
             if not self._peripheral.waitForNotifications(self._notification_timeout):
-                if self.debug:
-                    print(f"|-- Timeout waiting for {self._mac}")
+                LOGGER.debug(f"|-- Timeout waiting for {self._mac}")
                 raise PyLyTimeout(
                     f"No data from device {self._mac} for {self._notification_timeout} seconds"
                 )
 
-    def _process_history_data(self, data):
+    def _process_history_data(self, data) -> None:
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
         ts = datetime.fromtimestamp(ts)
@@ -162,14 +144,14 @@ class Lywsd02:  # pylint: disable=R0902
 
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
 
-    def _process_sensor_data(self, data):
+    def _process_sensor_data(self, data) -> None:
         temperature, humidity = struct.unpack_from("hB", data)
-        temperature /= 100
+        temperature /= 100.0
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=None, voltage=None
         )
 
-    def _subscribe(self, uuid, callback):
+    def _subscribe(self, uuid, callback) -> None:
         self._peripheral.setDelegate(self)
         ch = self._peripheral.getCharacteristics(uuid=uuid)[0]
         self._handles[ch.getHandle()] = callback
@@ -177,45 +159,50 @@ class Lywsd02:  # pylint: disable=R0902
 
         desc.write(0x01.to_bytes(2, byteorder="little"), withResponse=True)
 
-    # FIXME: why can't the name of this method be changed (?!)
-    def handleNotification(self, handle, data):  # noqa
+    # why can't the name of this method be changed?
+    def handleNotification(self, handle, data) -> None:
         func = self._handles.get(handle)
         if func:
             func(data)
 
     @contextlib.contextmanager
-    def connect(self):  # pylint: disable=R0912
+    def connect(self) -> Generator:  # pylint: disable=R0912
         """Handle device connecting and disconnecting"""
         if self._context_depth == 0:
-            if self.debug:
-                print(f"|-> Connecting to {self._mac}")
+            LOGGER.debug(f"|-> Connecting to {self._mac}")
             try:
                 self._peripheral.connect(addr=self._mac, timeout=self._notification_timeout)
             except (btle.BTLEConnectTimeout, btle.BTLEConnectError) as her:
-                message = ""
+                message: str = ""
                 reraise = PyLyException(f"-- {her} --")
+                # set appropriate error message
                 if isinstance(her, btle.BTLEConnectError):
                     message = f"Device ({self._mac}) connection failed."
                     reraise = PyLyConnectError(f"-- {her} --")
                 if isinstance(her, btle.BTLEConnectTimeout):
                     message = f"Device ({self._mac}) timed out on connect."
                     reraise = PyLyTimeout(f"-- {her} --")
-                self._tries -= 1
-                # fmt: off
-                warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
-                # fmt: on
-                if self._tries <= 0:
-                    self._resets -= 1
-                    ble_reset(debug=self.debug)
-                    self._set_tries()
-                    if self._resets <= 0:
-                        # re-raise because apparently resetting the radio doesn't work
-                        raise reraise from her
+                LOGGER.warning(f"{message}")
+                # Try to disconnect to avoid stale connections causing BTLEConnectError later.
+                LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_1)")
+                try:
+                    self._peripheral.disconnect()
+                except Exception as her2:  # pylint: disable=broad-exception-caught
+                    LOGGER.error(f"While disconnecting : {her2}")
+                raise reraise from her
             except Exception as her:
                 # Non-anticipated exceptions must be raised to draw attention to them
-                # We'll reset the radio because it has had results in the past
-                ble_reset(debug=self.debug)
-                raise PyLyException(f"-- {her} --") from her
+                message = f"Unexpected exception occured for device ({self._mac})."
+                reraise = PyLyException(f"-- {her} --")
+                LOGGER.error(f"{message}")
+                # Try to disconnect to avoid stale connections causing BTLEConnectError later.
+                LOGGER.debug(f"|-< Disconnecting from {self._mac}  (forced_unk)")
+                try:
+                    LOGGER.warning(f"*** Disconnecting from {self._mac}  (forced_unk)")
+                    self._peripheral.disconnect()
+                except Exception as her2:  # pylint: disable=broad-exception-caught
+                    LOGGER.error(f"While disconnecting : {her2}")
+                raise reraise from her
 
         self._context_depth += 1
         try:
@@ -226,43 +213,45 @@ class Lywsd02:  # pylint: disable=R0902
             if isinstance(her, btle.BTLEInternalError):
                 message = f"BTLE internal error while talking with device ({self._mac})."
                 reraise = PyLyException(f"-- {her} --")
-            self._tries -= 1
+            # self._tries -= 1
             # fmt: off
-            warnings.warn(f"{message} ({self._tr_msg()})", RuntimeWarning, stacklevel=2)
+            LOGGER.warning(f"{message}")
             # fmt: on
-            if self._tries <= 0:
-                self._resets -= 1
-                ble_reset(debug=self.debug)
-                self._set_tries()
-                if self._resets <= 0:
-                    # re-raise because apparently resetting the radio doesn't work
-                    raise reraise from her
+            # if self._tries <= 0:
+            #     self._resets -= 1
+            #     # ble_reset(debug=self.debug)
+            #     self._set_tries()
+            #     if self._resets <= 0:
+            #         # re-raise because apparently resetting the radio doesn't work
+            raise reraise from her
         except Exception as her:
             # Non-anticipated exceptions must be raised to draw attention to them
             # We'll reset the radio because it has had results in the past
-            ble_reset(debug=self.debug)
-            raise PyLyException(f"-- {her} --") from her
+            # ble_reset(debug=self.debug)
+            message = f"Unexpected exception occured for device ({self._mac})."
+            reraise = PyLyException(f"-- {her} --")
+            LOGGER.error(f"{message}")
+            raise reraise from her
         finally:
             self._context_depth -= 1
             if self._context_depth == 0:
-                if self.debug:
-                    print(f"|-< Disconnecting from {self._mac}")
+                LOGGER.debug(f"|-< Disconnecting from {self._mac} (final)")
                 self._peripheral.disconnect()
 
     @property
-    def battery(self):
+    def battery(self) -> float:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_BATTERY)[0]
             value = ch.read()
-        return ord(value)
+        return float(ord(value))
 
     @property
-    def data(self):
+    def data(self) -> SensorData:
         self._get_sensor_data()
         return self._data
 
     @property
-    def history_data(self):
+    def history_data(self) -> dict:
         self._get_history_data()
         return self._history_data
 
@@ -271,7 +260,7 @@ class Lywsd02:  # pylint: disable=R0902
         return self.data.humidity
 
     @property
-    def num_stored_entries(self):
+    def num_stored_entries(self) -> tuple:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_NUM_RECORDS)[0]
             value = ch.read()
@@ -283,11 +272,11 @@ class Lywsd02:  # pylint: disable=R0902
         return self.data.temperature
 
     @property
-    def history_index(self):
+    def history_index(self) -> Union[tuple, Literal[0]]:
         with self.connect():
             ch = self._peripheral.getCharacteristics(uuid=UUID_RECORD_IDX)[0]
             value = ch.read()
-        _idx = 0 if len(value) == 0 else struct.unpack_from("I", value)
+        _idx: Union[tuple, Literal[0]] = 0 if len(value) == 0 else struct.unpack_from("I", value)
         return _idx
 
     @history_index.setter
@@ -308,8 +297,6 @@ class Lywsd02:  # pylint: disable=R0902
             tz_offset = 0
         return datetime.fromtimestamp(ts), tz_offset
 
-    # FIXME: Incompatible types in assignment (setter has type "datetime",
-    #        property has type "tuple[datetime, int]")  [assignment] (mypy)
     @time.setter
     def time(self, dt: datetime) -> None:
         data = struct.pack("Ib", int(dt.timestamp()), self.tz_offset)
@@ -327,7 +314,7 @@ class Lywsd02:  # pylint: disable=R0902
 
     @tz_offset.setter
     def tz_offset(self, tz_offset: int) -> None:
-        self._tz_offset = tz_offset
+        self._tz_offset = tz_offset  # type: ignore[assignment]
 
     @property
     def units(self) -> str:
@@ -353,30 +340,33 @@ class Lywsd03(Lywsd02):
     UNITS = {b"\x01": "F", b"\x00": "C"}
     UNITS_CODES = {"F": b"\x01", "C": b"\x00"}
 
+    _MAX_TRIES = 6
+    _MAX_RESETS = 3
+
     # CR2025 / CR2032 maximum theoretical voltage = 3.4 V
     # ref. Table 1;
     #  CR2025: https://www.farnell.com/datasheets/1496883.pdf
     #  CR2032: https://www.farnell.com/datasheets/1496885.pdf
     # Lowest voltage for these batteries is 2.0 V but the BT radio
-    # on most devices will stop working when below 2.3 V (YMMV).
+    # on most devices will stop working somewhere below 2.3 V (YMMV).
     BATTERY_FULL = 3.4
-    BATTERY_LOW = 2.1
+    BATTERY_LOW = 2.21
 
     # Locally cache the start time of the device.
     # This value won't change, and caching improves the performance getting the history data
-    _start_time = False
+    _start_time: datetime = datetime(1970, 1, 1)
 
     # Getting history data is very slow, so don't output progress updates
     enable_history_progress = False
 
     # Call the parent init with a bigger notification timeout
-    def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False):
+    def __init__(self, mac, notification_timeout=12.3, reusable=False, debug=False) -> None:
         super().__init__(
             mac=mac, notification_timeout=notification_timeout, reusable=reusable, debug=debug
         )
         self._latest_record = None
 
-    def _get_history_data(self):
+    def _get_history_data(self) -> None:
         # Work out the expected last record we'll be sent from the device.
         # The current hour doesn't appear until the end of the hour, and the time is recorded as
         # the end of hour time
@@ -388,8 +378,7 @@ class Lywsd03(Lywsd02):
 
             while True:
                 if not self._peripheral.waitForNotifications(self._notification_timeout):
-                    if self.debug:
-                        print(f"|-- Timeout listening to {self._mac}")
+                    LOGGER.debug(f"|-- Timeout listening to {self._mac}")
                     break
 
                 # Find the last date we have data for, and check if it's for the current hour
@@ -397,7 +386,7 @@ class Lywsd03(Lywsd02):
                 if self._latest_record and self._latest_record >= expected_end:
                     break
 
-    def _process_history_data(self, data):
+    def _process_history_data(self, data) -> None:
         (idx, ts, max_temp, max_hum, min_temp, min_hum) = struct.unpack_from("<IIhBhB", data)
 
         # Work out the time of this record by adding the record time to time the
@@ -410,32 +399,35 @@ class Lywsd03(Lywsd02):
         self._history_data[idx] = [ts, min_temp, min_hum, max_temp, max_hum]
         self.output_history_progress(ts, min_temp, max_temp)
 
-    def _process_sensor_data(self, data):
+    def _process_sensor_data(self, data) -> None:
         """Process the sensor data.
 
         Args:
             data (struct): struct containing sensor data
+
+        Returns:
+            None
         """
         temperature, humidity, voltage = struct.unpack_from("<hBh", data)
         temperature /= 100
         voltage /= 1000
         # battery (float): Estimate percentage of the battery charge remaining
-        battery = round(
+        battery: float = round(
             ((voltage - self.BATTERY_LOW) / (self.BATTERY_FULL - self.BATTERY_LOW) * 100), 1
         )
         self._data = SensorData(
             temperature=temperature, humidity=humidity, battery=battery, voltage=voltage
         )
 
-    def output_history_progress(self, ts, min_temp, max_temp):
+    def output_history_progress(self, ts, min_temp, max_temp) -> None:
         if not self.enable_history_progress:
             return
         print(f"|-- {ts}: {min_temp} to {max_temp}")
 
     @property
-    def battery(self):
-        """Battery data comes along with the temperature and humidity data, so
-           just get it from there.
+    def battery(self) -> float:
+        """Battery percentage is calculated from voltage which comes along with the
+        temperature and humidity data, so we'll just get it from there.
 
         Returns:
              guestimate of battery percentage
@@ -443,7 +435,7 @@ class Lywsd03(Lywsd02):
         return self.data.battery
 
     @property
-    def start_time(self):
+    def start_time(self) -> datetime:
         """Work out the start time of the device.
         This is done by taking the current time, subtracting the time
         taken from the device (the run time), and adding the timezone offset.
@@ -451,7 +443,7 @@ class Lywsd03(Lywsd02):
         Returns:
             datetime: the start time of the device
         """
-        if not self._start_time:
+        if self._start_time == datetime(1970, 1, 1):
             start_time_delta = (
                 self.time[0] - datetime(1970, 1, 1) - timedelta(hours=self.tz_offset)
             )
@@ -459,7 +451,7 @@ class Lywsd03(Lywsd02):
         return self._start_time
 
     @property
-    def time(self):
+    def time(self) -> tuple[datetime, int]:
         """Fetch datetime and timezone of a LYWSD03MMC device
 
         Returns:
@@ -468,8 +460,8 @@ class Lywsd03(Lywsd02):
         return super().time
 
     @time.setter
-    def time(self, dt: datetime):  # pylint: disable=W0613
-        """Disable setting the time and timezone.
+    def time(self, dt: datetime) -> None:  # pylint: disable=W0613
+        """Dummy to disable setting the time and timezone.
         LYWSD03MMCs don't have visible clocks.
 
         Args:

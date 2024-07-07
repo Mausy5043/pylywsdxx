@@ -27,7 +27,7 @@ for mac in args.mac:
         client = pyly.Lywsd02(mac)
         if args.action == "sync":
             print(f"Synchronizing time of {mac}")
-            client.time = datetime.now()
+            client.time = datetime.now()  # type: ignore[assignment]
         elif args.action == "read":
             print(f"Fetching data from {mac}")
             data = client.data
