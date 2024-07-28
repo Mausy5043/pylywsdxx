@@ -1,22 +1,5 @@
 #!/usr/bin/env python3
 
-import datetime as dt
-import logging
-import statistics as stat
-import sys
-import time
-
-# from threading import Timer
-from typing import Any, Self
-
-from .device import Lywsd02
-from .device import Lywsd03
-from .device import PyLyConnectError, PyLyTimeout
-
-from .radioctl import ble_reset, force_disconnect
-
-LOGGER: logging.Logger = logging.getLogger(__name__)
-
 """
 Structure of the dict kept for each device.
 The dict `state` is returned to the client. The rest is for internal use.
@@ -38,6 +21,24 @@ The dict `state` is returned to the client. The rest is for internal use.
         },
 }
 """
+
+
+import datetime as dt
+import logging
+import statistics as stat
+import sys
+import time
+
+# from threading import Timer
+from typing import Any, Self
+
+from .device import Lywsd02
+from .device import Lywsd03
+from .device import PyLyConnectError, PyLyTimeout
+
+from .radioctl import ble_reset, force_disconnect
+
+LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class PyLyManager:
