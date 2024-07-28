@@ -1,5 +1,5 @@
 # When making changes to this file update requirements.txt also !!
-# Usage: conda -v env update -n pylywsdxx --file environment.yml
+# Usage: conda -v env update -n pylywsdxx --file environment.yml; pre-commit run --all-files
 
 channels:
   - conda-forge
@@ -8,6 +8,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
+  - pre-commit
   # Not on conda channels:
   - pip:
     - pylint>=3.0.2
