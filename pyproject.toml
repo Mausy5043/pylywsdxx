@@ -1,4 +1,4 @@
-# pyproject.toml
+# Project: pylywsdxx
 
 # Hatchling  https://packaging.python.org/en/latest/key_projects/#hatch
 [build-system]
@@ -41,6 +41,38 @@ include = [
     "pylywsdxx/py.typed",
 ]
 
+[tool.bandit]
+skips = []
+
 [tool.black]
 line-length = 98
 target-version = ["py39", "py310", "py311", "py312"]
+
+[tool.flake8]
+max_line_length = 98
+ignore = [
+# function too complex: is what we do ;-)
+    "C901",
+ # line too long: is checked by pylint
+    "E501",
+# line break before binary: is against policy.
+    "W503",
+]
+
+[tool.pydocstyle]
+inherit = false
+convention = 'google'
+match = '.*\\.py'
+add-ignore = 'D'
+
+[tool.mypy]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+check_untyped_defs = true
+disallow_subclassing_any = true
+disallow_untyped_decorators = true
+disallow_untyped_calls = true
+no_implicit_reexport = true
+extra_checks = true
