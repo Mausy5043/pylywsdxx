@@ -11,6 +11,7 @@ channels:
 dependencies:
   - python=3.11
   - pip
+  - pipdeptree
   - pre-commit
   # Not on conda channels:
   - pip:
