@@ -3,12 +3,15 @@
 import logging
 import logging.handlers
 
+# isort: off
 from .device import Lywsd02
 from .device import Lywsd03
 from .device import PyLyConnectError
 from .device import PyLyException
 from .device import PyLyTimeout
 from .device import PyLyValueError
+
+# isort: on
 from .manager import PyLyManager
 from .radioctl import ble_reset
 

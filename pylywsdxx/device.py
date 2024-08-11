@@ -6,10 +6,10 @@ import logging
 import struct
 import sys
 import time
-from typing import Generator, Literal, Union
 
 # import warnings
 from datetime import datetime, timedelta
+from typing import Generator, Literal, Union
 
 from bluepy3 import btle
 
