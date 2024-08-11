@@ -32,10 +32,12 @@ import time
 # from threading import Timer
 from typing import Any, Self
 
+# isort: off
 from .device import Lywsd02
 from .device import Lywsd03
 from .device import PyLyConnectError, PyLyTimeout
 
+# isort: on
 from .radioctl import ble_reset, force_disconnect
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
