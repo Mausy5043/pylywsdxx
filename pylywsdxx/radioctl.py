@@ -75,8 +75,11 @@ def force_disconnect(device: str) -> None:
     LOGGER.error(f"Forcing disconnect from device {device}")
     try:
         _result = (
-            subprocess.check_output(args, shell=False).decode(encoding="utf-8").strip()
-        )  # nosec B603
+            subprocess.check_output(args, shell=False)  # nosec B603
+            .decode(encoding="utf-8")
+            .strip()
+        )
+
         LOGGER.info(f"{de_escape_string(_result)}")
     except subprocess.CalledProcessError as her:
         # ignore if disconnect was unsuccesful, but log the error.
