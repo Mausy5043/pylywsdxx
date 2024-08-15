@@ -41,6 +41,12 @@ include = [
     "pylywsdxx/py.typed",
 ]
 
+[tool.autopep8]
+max_line_length = 98
+in-place = true
+recursive = true
+aggressive = 1
+
 [tool.bandit]
 skips = []
 
