@@ -16,4 +16,4 @@ dependencies:
   # Not on conda channels:
   - pip:
     - pylint>=3.0.2
-    - bluepy3
+    - bluepy3=2.12.*
