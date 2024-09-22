@@ -9,7 +9,7 @@ updates:
   - package-ecosystem: 'pip'
   # Look for `requirements.txt` file
     directory: '/'
-    target-branch: "master"
+    target-branch: "devel"
     schedule:
       interval: 'daily'
     allow:
