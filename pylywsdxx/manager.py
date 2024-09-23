@@ -224,7 +224,7 @@ class PyLyManager:
         # check radio
         self.handle_fails()
 
-    def qos_device(
+    def qos_device(  # pylint: disable=too-many-positional-arguments
         self,
         dev_id: str,
         state_of_charge: float,
