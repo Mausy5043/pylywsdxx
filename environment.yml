@@ -9,15 +9,15 @@ channels:
   - defaults
 
 dependencies:
-  - python=3.12
+  - python =3.12
   - pip
   # imported deps
 
   # Not on conda channels:
   - pip:
-    - bluepy3=2.12.*
+    - bluepy3 >=2.13,<2.16
 
   # dev deps
-  - pylint>=3.0.2
+  - pylint
   - pipdeptree
   - pre-commit
