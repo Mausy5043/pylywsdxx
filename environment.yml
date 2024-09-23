@@ -1,14 +1,23 @@
 # When making changes to this file update requirements.txt also !!
-# Usage: conda -v env update -n pylywsdxx --file environment.yml
+# Usage:
+# conda -v env update --file environment.yml; pre-commit run --all-files; pycheck
+
+name: pylywsdxx
 
 channels:
   - conda-forge
   - defaults
 
 dependencies:
-  - python=3.11
+  - python =3.12
   - pip
+  # imported deps
+
   # Not on conda channels:
   - pip:
-    - pylint>=3.0.2
-    - bluepy3
+    - bluepy3 >=2.13,<2.16
+
+  # dev deps
+  - pylint
+  - pipdeptree
+  - pre-commit
