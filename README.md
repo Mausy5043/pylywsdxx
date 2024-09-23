@@ -1,7 +1,9 @@
+
+[![License](https://img.shields.io/github/license/mausy5043/pylywsdxx)](LICENSE)
 [![PyPI version](https://img.shields.io/pypi/v/pylywsdxx.svg?logo=pypi&logoColor=FFE873)](https://pypi.org/project/pylywsdxx)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/pylywsdxx.svg?logo=python&logoColor=FFE873)](https://pypi.org/project/pylywsdxx)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pylywsdxx.svg)](https://pypistats.org/packages/pylywsdxx)
-[![Code style: Black](https://img.shields.io/badge/code%20style-Black-000000.svg)](https://github.com/psf/black)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Mausy5043/pylywsdxx/devel.svg)](https://results.pre-commit.ci/latest/github/Mausy5043/pylywsdxx/devel)
 
 # pylywsdxx
@@ -34,11 +36,11 @@ mac = "A4:C1:38:0D:EA:D0"
 
 device2 = pyly.Lywsd02(mac)
 data2 = device2.data
-print(f"Temperature: {data2.temperature}°C")
+print(f"Temperature: {data2.temperature}??C")
 
 device3 = pyly.Lywsd03(mac)
 data3 = device3.data
-print(f"Temperature: {data3.temperature}°C")
+print(f"Temperature: {data3.temperature}??C")
 ```
 
 Please note that this module has completely and intentionally broken backwards compatibility with previous
@@ -49,6 +51,6 @@ and existing versions of `lywsd02` and `lywsd03mmc` and with v1.* versions of it
 Based on previous work stolen from Mikhail Baranov (`h4`) : [lywsd02](https://github.com/h4/lywsd02)
 and Duncan Barclay (`uduncanu`) : [lywsd03mmc](https://github.com/uduncanu/lywsd03mmc)
 
-## License
 
-See [LICENSE](LICENSE).
+## Disclaimer & License
+As of September 2024 `pylywsdxx` is distributed under [AGPL-3.0-or-later](LICENSE).

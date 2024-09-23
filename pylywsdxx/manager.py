@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# pylywsdxx
+# Copyright (C) 2024  Maurice (mausy5043) Hendrix
+# AGPL-3.0-or-later  - see LICENSE
 """
 Structure of the dict kept for each device.
 The dict `state` is returned to the client. The rest is for internal use.
