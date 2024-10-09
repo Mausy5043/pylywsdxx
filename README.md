@@ -36,11 +36,11 @@ mac = "A4:C1:38:0D:EA:D0"
 
 device2 = pyly.Lywsd02(mac)
 data2 = device2.data
-print(f"Temperature: {data2.temperature}??C")
+print(f"Temperature: {data2.temperature}˚C")
 
 device3 = pyly.Lywsd03(mac)
 data3 = device3.data
-print(f"Temperature: {data3.temperature}??C")
+print(f"Temperature: {data3.temperature}˚C")
 ```
 
 Please note that this module has completely and intentionally broken backwards compatibility with previous
